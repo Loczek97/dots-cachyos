@@ -1,0 +1,36 @@
+# Matugen Configuration
+# This config generates color palette for Hyprland
+
+[config]
+reload_apps = true       # Reload applications after generating colors
+set_wallpaper = false    # Don't set wallpaper (handled by WallpaperPicker)
+type = "scheme-expressive"  # Use expressive colors that change noticeably
+contrast = 2.0              # Bardzo wysoki kontrast dla żywych kolorów
+
+[config.reload_apps_list.dunst]
+hook = "pkill dunst"
+
+[config.reload_apps_list.hyprland]
+hook = "hyprctl reload"
+
+[config.reload_apps_list.kitty]
+hook = "killall -SIGUSR1 kitty"
+
+[config.reload_apps_list.rofi]
+hook = "pkill rofi"
+
+[templates.colors]
+input_path = "~/.config/matugen/templates/colors.conf"
+output_path = "~/.config/hypr/colors.conf"
+
+[templates.kitty]
+input_path = "~/.config/matugen/templates/kitty.conf"
+output_path = "~/.config/kitty/current-theme.conf"
+
+[templates.p10k]
+input_path = "~/.config/matugen/templates/p10k-colors.zsh"
+output_path = "~/.config/p10k-colors.zsh"
+
+[templates.rofi]
+input_path = "~/.config/matugen/templates/rofi-colors.rasi"
+output_path = "~/.config/rofi/shared/colors.rasi"

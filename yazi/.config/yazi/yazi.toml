@@ -1,0 +1,6 @@
+[mgr]
+show_hidden = true
+sort_dir_first = true
+
+[preview]
+text_highlight = "bat"
