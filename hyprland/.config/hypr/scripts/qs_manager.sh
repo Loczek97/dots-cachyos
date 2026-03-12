@@ -4,7 +4,7 @@
 QS_DIR="$HOME/.config/hypr/scripts/quickshell"
 BT_PID_FILE="$HOME/.cache/bt_scan_pid"
 BT_SCAN_LOG="$HOME/.cache/bt_scan.log"
-SRC_DIR="$HOME/Images/Wallpapers"
+SRC_DIR="$HOME/.config/backgrounds"
 THUMB_DIR="$HOME/.cache/wallpaper_picker/thumbs"
 
 ACTION="$1"
@@ -51,34 +51,34 @@ cleanup_all() {
 # -----------------------------------------------------------------------------
 handle_wallpaper_prep() {
     mkdir -p "$THUMB_DIR"
+
+    # Generuj brakujące thumbnails SYNCHRONICZNIE
+    for img in "$SRC_DIR"/*.{jpg,jpeg,png,webp,gif}; do
+        [ -e "$img" ] || continue
+        filename=$(basename "$img")
+        thumb="$THUMB_DIR/$filename"
+        if [ ! -f "$thumb" ]; then
+            magick "$img" -resize x420 -quality 70 "$thumb"
+        fi
+    done
+
+    for vid in "$SRC_DIR"/*.{mp4,mkv,mov,webm}; do
+        [ -e "$vid" ] || continue
+        filename=$(basename "$vid")
+        thumb="$THUMB_DIR/000_$filename"
+        if [ ! -f "$thumb" ]; then
+            ffmpeg -y -ss 00:00:05 -i "$vid" -vframes 1 -f image2 -q:v 2 "${thumb%.*}.jpg" > /dev/null 2>&1
+        fi
+    done
+
+    # Usuń stare thumbnails w tle
     (
-        # CLEANUP: Remove thumbnails that no longer have a source wallpaper
         for thumb in "$THUMB_DIR"/*; do
             [ -e "$thumb" ] || continue
             filename=$(basename "$thumb")
             clean_name="${filename#000_}"
             if [ ! -f "$SRC_DIR/$clean_name" ]; then
                 rm -f "$thumb"
-            fi
-        done
-
-        # GENERATE: Create thumbnails for new or renamed wallpapers
-        for img in "$SRC_DIR"/*.{jpg,jpeg,png,webp,gif,mp4,mkv,mov,webm}; do
-            [ -e "$img" ] || continue
-            filename=$(basename "$img")
-            extension="${filename##*.}"
-
-            if [[ "${extension,,}" =~ ^(mp4|mkv|mov|webm)$ ]]; then
-                thumb="$THUMB_DIR/000_$filename"
-                [ -f "$THUMB_DIR/$filename" ] && rm -f "$THUMB_DIR/$filename"
-                if [ ! -f "$thumb" ]; then
-                     ffmpeg -y -ss 00:00:05 -i "$img" -vframes 1 -f image2 -q:v 2 "$thumb" > /dev/null 2>&1
-                fi
-            else
-                thumb="$THUMB_DIR/$filename"
-                if [ ! -f "$thumb" ]; then
-                    magick "$img" -resize x420 -quality 70 "$thumb"
-                fi
             fi
         done
     ) &
@@ -92,8 +92,8 @@ handle_wallpaper_prep() {
         CURRENT_SRC=$(basename "$CURRENT_SRC")
     fi
 
-    if [ -z "$CURRENT_SRC" ] && command -v swww >/dev/null; then
-        CURRENT_SRC=$(swww query 2>/dev/null | grep -o "$SRC_DIR/[^ ]*" | head -n1)
+    if [ -z "$CURRENT_SRC" ] && command -v awww >/dev/null; then
+        CURRENT_SRC=$(awww query 2>/dev/null | grep -o "$SRC_DIR/[^ ]*" | head -n1)
         CURRENT_SRC=$(basename "$CURRENT_SRC")
     fi
 

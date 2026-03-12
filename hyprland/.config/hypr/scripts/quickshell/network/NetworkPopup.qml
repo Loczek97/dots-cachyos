@@ -4,6 +4,7 @@ import QtQuick.Window
 import QtCore
 import Quickshell
 import Quickshell.Io
+import "MatugenTheme.qml"
 
 FloatingWindow {
     id: window
@@ -12,6 +13,9 @@ FloatingWindow {
     implicitWidth: 900
     implicitHeight: 700
     color: "transparent"
+
+    // Dynamic Theme from Matugen
+    MatugenTheme { id: theme }
 
     function closePopup() {
         Quickshell.execDetached(["bash", "-c", "pkill -f 'quickshell.*NetworkPopup.qml'; if [ -f ~/.cache/bt_scan_pid ]; then kill $(cat ~/.cache/bt_scan_pid) 2>/dev/null; rm ~/.cache/bt_scan_pid; fi; bluetoothctl scan off > /dev/null 2>&1"])
@@ -44,26 +48,26 @@ FloatingWindow {
     }
 
     // -------------------------------------------------------------------------
-    // COLORS (Catppuccin Mocha)
+    // COLOR MAPPINGS
     // -------------------------------------------------------------------------
-    readonly property color base: "#1e1e2e"
-    readonly property color mantle: "#181825"
-    readonly property color crust: "#11111b"
-    readonly property color text: "#cdd6f4"
-    readonly property color subtext0: "#a6adc8"
-    readonly property color overlay0: "#6c7086"
-    readonly property color overlay1: "#7f849c"
-    readonly property color surface0: "#313244"
-    readonly property color surface1: "#45475a"
-    readonly property color surface2: "#585b70"
+    readonly property color base: theme.base
+    readonly property color mantle: theme.mantle
+    readonly property color crust: theme.crust
+    readonly property color text: theme.text
+    readonly property color subtext0: theme.subtext0
+    readonly property color overlay0: theme.overlay0
+    readonly property color overlay1: theme.overlay1
+    readonly property color surface0: theme.surface0
+    readonly property color surface1: theme.surface1
+    readonly property color surface2: theme.surface2
     
-    readonly property color mauve: "#cba6f7"
-    readonly property color pink: "#f5c2e7"
-    readonly property color sapphire: "#74c7ec"
-    readonly property color blue: "#89b4fa"
-    readonly property color red: "#f38ba8"
-    readonly property color maroon: "#eba0ac"
-    readonly property color peach: "#fab387"
+    readonly property color mauve: theme.mauve
+    readonly property color pink: theme.pink
+    readonly property color sapphire: theme.sapphire
+    readonly property color blue: theme.blue
+    readonly property color red: theme.red
+    readonly property color maroon: theme.maroon
+    readonly property color peach: theme.peach
 
     readonly property string scriptsDir: "/home/michal/.config/hypr/scripts/quickshell/network"
     // -------------------------------------------------------------------------

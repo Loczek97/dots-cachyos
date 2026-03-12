@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Effects
+import "MatugenTheme.qml"
 
 Window {
     id: root
@@ -10,31 +11,40 @@ Window {
     title: "stewart"
     color: "transparent" 
 
+    // Dynamic Theme from Matugen
+    MatugenTheme { id: theme }
+
     // Master Container
     Rectangle {
         id: windowContent
         anchors.fill: parent
         radius: 12
-        color: "#1e1e2e" // Catppuccin Mocha: Base
+        color: theme.base
         clip: true
 
         // ---------------------------------------------------------------------
         // GLOBAL THEME & STATE CONTROLS
         // ---------------------------------------------------------------------
         
+        // Color mappings from theme
+        readonly property color basePurple: theme.primary
+        readonly property color accentLavender: theme.lavender
+        readonly property color surfaceGray: theme.surface0
+        readonly property color surfaceDark: theme.mantle
+        
         // 5. Slow Color Temperature Drift
-        property color currentBasePurple: "#cba6f7"
+        property color currentBasePurple: theme.primary
         SequentialAnimation on currentBasePurple {
             loops: Animation.Infinite; running: true
-            ColorAnimation { to: "#dca6eb"; duration: 15000; easing.type: Easing.InOutSine } // Warmer
-            ColorAnimation { to: "#cba6f7"; duration: 15000; easing.type: Easing.InOutSine }
+            ColorAnimation { to: Qt.lighter(theme.primary, 1.05); duration: 15000; easing.type: Easing.InOutSine } // Warmer
+            ColorAnimation { to: theme.primary; duration: 15000; easing.type: Easing.InOutSine }
         }
 
-        property color currentAccentLavender: "#b4befe"
+        property color currentAccentLavender: theme.lavender
         SequentialAnimation on currentAccentLavender {
             loops: Animation.Infinite; running: true
-            ColorAnimation { to: "#b4d0fe"; duration: 15000; easing.type: Easing.InOutSine } // Cooler
-            ColorAnimation { to: "#b4befe"; duration: 15000; easing.type: Easing.InOutSine }
+            ColorAnimation { to: Qt.lighter(theme.lavender, 1.03); duration: 15000; easing.type: Easing.InOutSine } // Cooler
+            ColorAnimation { to: theme.lavender; duration: 15000; easing.type: Easing.InOutSine }
         }
 
         // Animation States
@@ -231,8 +241,8 @@ Window {
                     
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "#45475a" }
-                        GradientStop { position: 1.0; color: "#313244" }
+                        GradientStop { position: 0.0; color: windowContent.surfaceGray }
+                        GradientStop { position: 1.0; color: windowContent.surfaceDark }
                     }
                 }
 

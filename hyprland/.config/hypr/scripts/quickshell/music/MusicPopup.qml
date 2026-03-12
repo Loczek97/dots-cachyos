@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
+import "MatugenTheme.qml"
 
 FloatingWindow {
     id: root
@@ -13,29 +14,32 @@ FloatingWindow {
 
     // Geometry
     implicitWidth: 700
-    implicitHeight: 620
+    implicitHeight: 280
 
     // Make the base window transparent so our rounded corners show properly
     color: "transparent"
 
-    // Theme Colors
-    readonly property color base: "#1e1e2e"
-    readonly property color surface0: "#313244"
-    readonly property color surface1: "#45475a"
-    readonly property color surface2: "#585b70"
-    readonly property color overlay0: "#6c7086"
-    readonly property color overlay1: "#7f849c"
-    readonly property color overlay2: "#9399b2"
-    readonly property color text: "#cdd6f4"
-    readonly property color subtext0: "#a6adc8"
-    readonly property color subtext1: "#bac2de"
-    readonly property color blue: "#89b4fa"
-    readonly property color sapphire: "#74c7ec"
-    readonly property color lavender: "#b4befe"
-    readonly property color mauve: "#cba6f7"
-    readonly property color pink: "#f5c2e7"
-    readonly property color red: "#f38ba8"
-    readonly property color yellow: "#f9e2af"
+    // Dynamic Theme from Matugen
+    MatugenTheme { id: theme }
+
+    // Theme Color Mappings
+    readonly property color base: theme.base
+    readonly property color surface0: theme.surface0
+    readonly property color surface1: theme.surface1
+    readonly property color surface2: theme.surface2
+    readonly property color overlay0: theme.overlay0
+    readonly property color overlay1: theme.overlay1
+    readonly property color overlay2: theme.overlay2
+    readonly property color text: theme.text
+    readonly property color subtext0: theme.subtext0
+    readonly property color subtext1: theme.subtext1
+    readonly property color blue: theme.blue
+    readonly property color sapphire: theme.sapphire
+    readonly property color lavender: theme.lavender
+    readonly property color mauve: theme.mauve
+    readonly property color pink: theme.pink
+    readonly property color red: theme.red
+    readonly property color yellow: theme.yellow
 
     // Data State Properties
     property var musicData: {
@@ -49,7 +53,7 @@ FloatingWindow {
     property var eqData: {
         "b1": 0, "b2": 0, "b3": 0, "b4": 0, "b5": 0,
         "b6": 0, "b7": 0, "b8": 0, "b9": 0, "b10": 0,
-        "preset": "Flat", "pending": false
+        "preset": "Domyślny", "pending": false
     }
 
     // Accumulators for Process standard output
@@ -106,14 +110,14 @@ FloatingWindow {
 
     function applyPresetOptimistically(presetName) {
         var presets = {
-            "Flat": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "Domyślny": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             "Bass": [5, 7, 5, 2, 1, 0, 0, 0, 1, 2],
-            "Treble": [-2, -1, 0, 1, 2, 3, 4, 5, 6, 6],
-            "Vocal": [-2, -1, 1, 3, 5, 5, 4, 2, 1, 0],
+            "Wysokie": [-2, -1, 0, 1, 2, 3, 4, 5, 6, 6],
+            "Wokalny": [-2, -1, 1, 3, 5, 5, 4, 2, 1, 0],
             "Pop": [2, 4, 2, 0, 1, 2, 4, 2, 1, 2],
             "Rock": [5, 4, 2, -1, -2, -1, 2, 4, 5, 6],
             "Jazz": [3, 3, 1, 1, 1, 1, 2, 1, 2, 3],
-            "Classic": [0, 1, 2, 2, 2, 2, 1, 2, 3, 4]
+            "Klasyczny": [0, 1, 2, 2, 2, 2, 1, 2, 3, 4]
         };
         if (presets[presetName]) {
             var temp = Object.assign({}, root.eqData);
@@ -222,7 +226,6 @@ FloatingWindow {
                     width: parent.width * 2
                     height: parent.height * 2
                     anchors.centerIn: parent
-                    rotation: gradAnim.angle
                     gradient: Gradient {
                         GradientStop { 
                             position: 0.0; color: root.borderColors[0] 
@@ -242,7 +245,6 @@ FloatingWindow {
                         }
                     }
                     NumberAnimation on rotation {
-                        id: gradAnim
                         from: 0; to: 360; duration: 5000
                         loops: Animation.Infinite
                         running: true
@@ -300,15 +302,15 @@ FloatingWindow {
                 // ==========================================
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 220
+                    Layout.preferredHeight: 200
                     spacing: 25
 
                     // Cover Art
                     Rectangle {
-                        Layout.preferredWidth: 220
-                        Layout.preferredHeight: 220
+                        Layout.preferredWidth: 200
+                        Layout.preferredHeight: 200
                         Layout.alignment: Qt.AlignVCenter
-                        radius: 110
+                        radius: 100
                         color: root.surface1
                         border.width: 4
                         border.color: root.musicData.status === "Playing" ? root.mauve : root.overlay0
@@ -582,213 +584,7 @@ FloatingWindow {
                         }
                     }
                 }
-
-                // ==========================================
-                // SEPARATOR
-                // ==========================================
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 2
-                    Layout.topMargin: 20
-                    Layout.bottomMargin: 20
-                    color: "#1AFFFFFF"
-                    radius: 1
-                }
-
-                // ==========================================
-                // EQUALIZER
-                // ==========================================
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 15
-
-                    // Header Row
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Text { text: "Equalizer"; color: root.mauve; font.family: "JetBrains Mono"; font.pixelSize: 16; font.bold: true; Layout.fillWidth: true }
-                        
-                        // Apply Button
-                        Rectangle {
-                            Layout.preferredHeight: 22
-                            Layout.preferredWidth: applyTxt.width + 20
-                            radius: 6
-                            color: root.eqData.pending ? "#1AF38BA8" : "transparent"
-                            border.color: root.eqData.pending ? root.red : "transparent"
-                            Text {
-                                id: applyTxt
-                                anchors.centerIn: parent
-                                text: root.eqData.pending ? "Zastosuj" : "Zapisano"
-                                color: root.eqData.pending ? root.red : root.overlay1
-                                font.family: "JetBrains Mono"
-                                font.pixelSize: 11
-                                font.bold: true
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    var temp = Object.assign({}, root.eqData);
-                                    temp.pending = false;
-                                    root.eqData = temp;
-                                    root.execCmd("$HOME/.config/hypr/scripts/quickshell/music/equalizer.sh apply");
-                                }
-                            }
-                        }
-                        Text { text: root.eqData.preset || "Domyślny"; color: root.subtext0; font.family: "JetBrains Mono"; font.pixelSize: 14; font.bold: true; Layout.leftMargin: 15 }
-                    }
-
-                    // Eq Sliders (10 bands)
-                    Row {
-                        id: eqSliderRow
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 180
-
-                        Repeater {
-                            model: [
-                                {"idx": 1, "lbl": "31"}, {"idx": 2, "lbl": "63"}, {"idx": 3, "lbl": "125"},
-                                {"idx": 4, "lbl": "250"}, {"idx": 5, "lbl": "500"}, {"idx": 6, "lbl": "1k"},
-                                {"idx": 7, "lbl": "2k"}, {"idx": 8, "lbl": "4k"}, {"idx": 9, "lbl": "8k"},
-                                {"idx": 10, "lbl": "16k"}
-                            ]
-                            delegate: Item {
-                                width: eqSliderRow.width / 10 
-                                height: eqSliderRow.height
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    spacing: 5
-                                    Slider {
-                                        id: eqSlider
-                                        Layout.fillHeight: true
-                                        Layout.alignment: Qt.AlignHCenter
-                                        orientation: Qt.Vertical
-                                        from: -12; to: 12
-                                        stepSize: 1
-
-                                        Connections {
-                                            target: root
-                                            function onEqDataChanged() {
-                                                if (!eqSlider.pressed) {
-                                                    if (root.eqData && root.eqData["b" + modelData.idx] !== undefined) {
-                                                        var p = Number(root.eqData["b" + modelData.idx]);
-                                                        if (!isNaN(p)) eqSlider.value = p;
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        Behavior on value {
-                                            enabled: !eqSlider.pressed
-                                            NumberAnimation {
-                                                duration: 350
-                                                easing.type: Easing.OutQuart
-                                            }
-                                        }
-
-                                        onPressedChanged: {
-                                            if (!pressed) {
-                                                var temp = Object.assign({}, root.eqData);
-                                                temp["b" + modelData.idx] = Math.round(value);
-                                                temp.preset = "Własny";
-                                                temp.pending = true;
-                                                root.eqData = temp;
-                                                root.execCmd(`$HOME/.config/hypr/scripts/quickshell/music/equalizer.sh set_band ${modelData.idx} ${Math.round(value)}`);
-                                            }
-                                        }
-
-                                        background: Rectangle {
-                                            x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
-                                            y: eqSlider.topPadding
-                                            implicitWidth: 10 
-                                            implicitHeight: 150
-                                            width: 10; height: eqSlider.availableHeight
-                                            radius: 5; 
-                                            color: "#CC000000"
-
-                                            layer.enabled: true
-                                            layer.effect: MultiEffect {
-                                                shadowEnabled: true
-                                                shadowColor: "#000000"
-                                                shadowOpacity: 0.9
-                                                shadowBlur: 0.5
-                                                shadowVerticalOffset: 1
-                                            }
-
-                                            Rectangle {
-                                                width: parent.width
-                                                height: (1 - eqSlider.visualPosition) * parent.height
-                                                y: eqSlider.visualPosition * parent.height
-                                                radius: 5; color: root.blue
-                                            }
-                                        }
-
-                                        handle: Rectangle {
-                                            x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
-                                            y: eqSlider.topPadding + eqSlider.visualPosition * (eqSlider.availableHeight - height)
-                                            implicitWidth: 20
-                                            implicitHeight: 20
-                                            width: 20; height: 20
-                                            radius: 10; color: root.text
-                                        }
-                                    }
-                                    Text {
-                                        text: modelData.lbl
-                                        color: root.overlay1
-                                        font.family: "JetBrains Mono"
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        Layout.alignment: Qt.AlignHCenter
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Presets Grid
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Repeater {
-                                model: ["Domyślny", "Bass", "Wysokie", "Wokalny"]
-                                delegate: PresetButton { name: modelData }
-                            }
-                        }
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Repeater {
-                                model: ["Pop", "Rock", "Jazz", "Klasyczny"]
-                                delegate: PresetButton { name: modelData }
-                            }
-                        }
-                    }
-                }
             }
-        }
-    }
-
-    // --- HELPER COMPONENT FOR PRESETS ---
-    component PresetButton : Rectangle {
-        property string name: ""
-        Layout.fillWidth: true
-        Layout.preferredHeight: 32
-        radius: 8
-        color: root.eqData && root.eqData.preset === name ? root.mauve : "#BF1E1E2E"
-
-        Text {
-            anchors.centerIn: parent
-            text: parent.name
-            color: root.eqData && root.eqData.preset === parent.name ? root.base : root.subtext0
-            font.family: "JetBrains Mono"
-            font.pixelSize: 12
-            font.bold: true
-        }
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.applyPresetOptimistically(parent.name)
         }
     }
 }

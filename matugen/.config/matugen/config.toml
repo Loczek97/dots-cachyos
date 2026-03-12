@@ -19,6 +19,15 @@ hook = "killall -SIGUSR1 kitty"
 [config.reload_apps_list.rofi]
 hook = "pkill rofi"
 
+[config.reload_apps_list.quickshell]
+hook = "~/.config/hypr/scripts/qs_manager.sh restart"
+
+[config.reload_apps_list.eww]
+hook = "eww reload"
+
+[config.reload_apps_list.swaync]
+hook = "sleep 1 && swaync-client -rs"
+
 [templates.colors]
 input_path = "~/.config/matugen/templates/colors.conf"
 output_path = "~/.config/hypr/colors.conf"
@@ -34,3 +43,39 @@ output_path = "~/.config/p10k-colors.zsh"
 [templates.rofi]
 input_path = "~/.config/matugen/templates/rofi-colors.rasi"
 output_path = "~/.config/rofi/shared/colors.rasi"
+
+[templates.quickshell_battery]
+input_path = "~/.config/matugen/templates/MatugenTheme.qml"
+output_path = "~/.config/hypr/scripts/quickshell/battery/MatugenTheme.qml"
+
+[templates.quickshell_calendar]
+input_path = "~/.config/matugen/templates/MatugenTheme.qml"
+output_path = "~/.config/hypr/scripts/quickshell/calendar/MatugenTheme.qml"
+
+[templates.quickshell_music]
+input_path = "~/.config/matugen/templates/MatugenTheme.qml"
+output_path = "~/.config/hypr/scripts/quickshell/music/MatugenTheme.qml"
+
+[templates.quickshell_network]
+input_path = "~/.config/matugen/templates/MatugenTheme.qml"
+output_path = "~/.config/hypr/scripts/quickshell/network/MatugenTheme.qml"
+
+[templates.quickshell_stewart]
+input_path = "~/.config/matugen/templates/MatugenTheme.qml"
+output_path = "~/.config/hypr/scripts/quickshell/stewart/MatugenTheme.qml"
+
+[templates.quickshell_wallpaper]
+input_path = "~/.config/matugen/templates/MatugenTheme.qml"
+output_path = "~/.config/hypr/scripts/quickshell/wallpaper/MatugenTheme.qml"
+
+[templates.eww_bar]
+input_path = "~/.config/matugen/templates/eww-colors.scss"
+output_path = "~/.config/eww/bar/matugen-colors.scss"
+
+[templates.swaync]
+input_path = "~/.config/matugen/templates/swaync-colors.css"
+output_path = "~/.config/swaync/matugen-colors.css"
+
+[templates.discord]
+input_path = '~/.config/matugen/templates/discord.css'
+output_path = '~/.config/BetterDiscord/themes/matugen.theme.css'

@@ -85,7 +85,7 @@ entry {
     background-color:            transparent;
     text-color:                  inherit;
     cursor:                      text;
-    placeholder:                 "Search";
+    placeholder:                 "Szukaj...";
     placeholder-color:           inherit;
 }
 

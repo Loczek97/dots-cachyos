@@ -23,8 +23,8 @@ FloatingWindow {
     property string homePath: ""
     property int wallpaperIndex: 0
     readonly property string thumbDir: homeDir + "/.cache/wallpaper_picker/thumbs"
-    readonly property string srcDir: homePath + "/.config/backgrounds"
-    readonly property string backgroundsDir: homeDir + "/.config/backgrounds"
+    property string srcDir: homePath.length > 0 ? homePath + "/.config/backgrounds" : ""
+    property string backgroundsDir: homePath.length > 0 ? "file://" + homePath + "/.cache/wallpaper_picker/thumbs" : ""
 
     // Get HOME directory using Process
     Process {
@@ -51,33 +51,6 @@ FloatingWindow {
             }
         }
     }
-    
-    // Generate thumbnails on startup (only missing ones)
-    Process {
-        id: thumbGenerator
-        running: window.homePath !== ""
-        command: ["bash", "-c", 
-            "HOMEPATH='" + window.homePath + "'; " +
-            "THUMBDIR=\"$HOMEPATH/.cache/wallpaper_picker/thumbs\"; " +
-            "BGDIR=\"$HOMEPATH/.config/backgrounds\"; " +
-            "mkdir -p \"$THUMBDIR\"; " +
-            "cd \"$BGDIR\" 2>/dev/null || exit 0; " +
-            "for file in *.jpg *.jpeg *.png *.webp *.gif *.mp4 *.mkv *.mov *.webm; do " +
-            "  [ -f \"$file\" ] || continue; " +
-            "  thumb=\"$THUMBDIR/${file}.jpg\"; " +
-            "  [ -f \"$thumb\" ] && continue; " +
-            "  case \"$file\" in " +
-            "    *.mp4|*.mkv|*.mov|*.webm) " +
-            "      ffmpeg -ss 00:00:01 -i \"$file\" -vf 'scale=200:-1' -q:v 5 \"$thumb\" 2>/dev/null & " +
-            "      ;; " +
-            "    *) " +
-            "      magick \"$file\" -resize 200x -quality 70 \"$thumb\" 2>/dev/null & " +
-            "      ;; " +
-            "  esac; " +
-            "done; " +
-            "wait"
-        ]
-    }
 
     // AWWW Command Template
     readonly property string awwwCommand: "awww img '%1' --transition-type %2 --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1"
@@ -92,7 +65,7 @@ FloatingWindow {
     property string mpvCommand: ""
     
     onHomePathChanged: {
-        mpvCommand = "pkill mpvpaper; mpvpaper -o 'loop --hwdec=auto --no-audio' '*' '%1' & sleep 0.5; " + homePath + "/.config/eww/bar/launch_bar.sh --force-open"
+        mpvCommand = "pkill mpvpaper; mpvpaper -o 'loop --hwdec=auto --no-audio' '*' '%1'"
     }
     
     // List of available awww transitions to randomize from
@@ -165,17 +138,13 @@ FloatingWindow {
             anchors.verticalCenter: parent.verticalCenter
 
             readonly property bool isCurrent: ListView.isCurrentItem
-            readonly property bool isVideo: {
-                var ext = fileName.toLowerCase()
-                return ext.endsWith(".mp4") || ext.endsWith(".mkv") || 
-                       ext.endsWith(".mov") || ext.endsWith(".webm")
-            }
-            readonly property string thumbUrl: window.thumbDir + "/" + fileName + ".jpg"
+            readonly property bool isVideo: fileName.startsWith("000_")
 
             z: isCurrent ? 10 : 1
 
             function pickWallpaper() {
-                const originalFile = window.srcDir + "/" + fileName
+                const originalFileName = fileName.startsWith("000_") ? fileName.substring(4).replace(/\.[^/.]+$/, "") : fileName
+                const originalFile = window.srcDir + "/" + originalFileName
                 
                 // Create symlink to current wallpaper
                 const symlinkCmd = window.symlinkCommand.arg(originalFile)
@@ -186,12 +155,13 @@ FloatingWindow {
                      Quickshell.execDetached(["bash", "-c", finalCmd])
                 } else {
                      // Generate color palette with matugen for images
-                     const matugenCmd = "matugen image '" + originalFile + "' --mode dark"
-                     Quickshell.execDetached(["bash", "-c", matugenCmd])
                      
                      const randomTransition = window.transitions[Math.floor(Math.random() * window.transitions.length)]
                      const finalCmd = window.awwwCommand.arg(originalFile).arg(randomTransition)
                      Quickshell.execDetached(["bash", "-c", "pkill mpvpaper; " + finalCmd])
+
+                     const matugenCmd = "sleep 1 && matugen image '" + originalFile + "' --mode dark"
+                     Quickshell.execDetached(["bash", "-c", matugenCmd])
                 }
                 
                 Qt.quit()
@@ -225,20 +195,10 @@ FloatingWindow {
                 // 1. DYNAMIC BORDER (Background Layer)
                 Image {
                     anchors.fill: parent
-                    source: delegateRoot.thumbUrl
-                    asynchronous: true
-                    sourceSize: Qt.size(200, 200)
+                    source: fileUrl
+                    sourceSize: Qt.size(1, 1)
                     fillMode: Image.Stretch
-                    cache: true
-                    smooth: false
-                    
-                    // Fallback to original if thumb doesn't exist
-                    onStatusChanged: {
-                        if (status === Image.Error) {
-                            source = fileUrl
-                            sourceSize = Qt.size(300, 300)
-                        }
-                    }
+                    visible: true 
                 }
 
                 // 2. THE IMAGE (Inset Layer)
@@ -257,19 +217,7 @@ FloatingWindow {
                         height: parent.height
                         
                         fillMode: Image.PreserveAspectCrop
-                        source: delegateRoot.thumbUrl
-                        asynchronous: true
-                        sourceSize: Qt.size(200, 200)
-                        cache: true
-                        smooth: false
-                        
-                        // Fallback to original if thumb doesn't exist
-                        onStatusChanged: {
-                            if (status === Image.Error) {
-                                source = fileUrl
-                                sourceSize = Qt.size(300, 300)
-                            }
-                        }
+                        source: fileUrl
 
                         transform: Matrix4x4 {
                             property real s: -window.skewFactor

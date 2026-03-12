@@ -4,28 +4,28 @@
  */
 
 * {
-    background:     #141318;
-    background-alt: #1c1b20;
-    foreground:     #e6e1e9;
-    selected:       #cebdfe;
-    active:         #cbc3dc;
+    background:     #111318;
+    background-alt: #191c20;
+    foreground:     #e1e2e8;
+    selected:       #a4c9fe;
+    active:         #bcc7db;
     urgent:         #ffb4ab;
-    border:         #938f99;
-    placeholder:    #cac4cf;
-    highlight:      #efb8c9;
+    border:         #8d9199;
+    placeholder:    #c3c6cf;
+    highlight:      #d9bde3;
     error:          #ffb4ab;
     
     /* Transparent variants for rofi */
-    bg-trans:       #141318f5;
-    input-bg:       #211f24e6;
-    input-border:   #cebdfe80;
-    selected-bg:    #cebdfe80;
+    bg-trans:       #111318f5;
+    input-bg:       #1d2024e6;
+    input-border:   #a4c9fe80;
+    selected-bg:    #a4c9fe80;
     
     /* Disable alternate row coloring */
     alternate-normal-background: transparent;
-    alternate-normal-foreground: #e6e1e9;
+    alternate-normal-foreground: #e1e2e8;
     alternate-urgent-background: transparent;
     alternate-urgent-foreground: #ffb4ab;
     alternate-active-background: transparent;
-    alternate-active-foreground: #cbc3dc;
+    alternate-active-foreground: #bcc7db;
 }

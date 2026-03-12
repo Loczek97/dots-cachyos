@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 STATE_FILE="/tmp/eww_eq_state.json"
-PRESET_DIR="$HOME/.config/easyeffects/output"
+PRESET_DIR="$HOME/.local/share/easyeffects/output"
 PRESET_NAME="eww_live_eq"
 PRESET_FILE="$PRESET_DIR/${PRESET_NAME}.json"
 
@@ -36,7 +36,17 @@ except:
     sys.exit(1)
 " "$vals" > "$PRESET_FILE"
 
-    easyeffects -l "$PRESET_NAME" >/dev/null 2>&1 &
+    # Check if easyeffects is running, if not start it
+    if ! pgrep -x easyeffects > /dev/null; then
+        easyeffects --gapplication-service &
+        sleep 1
+    fi
+    
+    # Load the preset with a slight delay to ensure it's applied
+    easyeffects -l "$PRESET_NAME" >/dev/null 2>&1
+    sleep 0.1
+    # Apply again to ensure it sticks
+    easyeffects -l "$PRESET_NAME" >/dev/null 2>&1
 }
 
 # Save state helper (Always sets pending to false because Presets apply instantly)

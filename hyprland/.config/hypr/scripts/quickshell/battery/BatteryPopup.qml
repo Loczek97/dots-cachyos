@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import Quickshell
 import Quickshell.Io
+import "MatugenTheme.qml"
 
 FloatingWindow {
     id: window
@@ -13,30 +14,33 @@ FloatingWindow {
 
     Shortcut { sequence: "Escape"; onActivated: Qt.quit() }
 
+    // Dynamic Theme from Matugen
+    MatugenTheme { id: theme }
+
     // -------------------------------------------------------------------------
-    // COLORS (Catppuccin Mocha)
+    // COLOR MAPPINGS
     // -------------------------------------------------------------------------
-    readonly property color base: "#1e1e2e"
-    readonly property color mantle: "#181825"
-    readonly property color crust: "#11111b"
-    readonly property color text: "#cdd6f4"
-    readonly property color subtext0: "#a6adc8"
-    readonly property color overlay0: "#6c7086"
-    readonly property color overlay1: "#7f849c"
-    readonly property color surface0: "#313244"
-    readonly property color surface1: "#45475a"
-    readonly property color surface2: "#585b70"
+    readonly property color base: theme.base
+    readonly property color mantle: theme.mantle
+    readonly property color crust: theme.crust
+    readonly property color text: theme.text
+    readonly property color subtext0: theme.subtext0
+    readonly property color overlay0: theme.overlay0
+    readonly property color overlay1: theme.overlay1
+    readonly property color surface0: theme.surface0
+    readonly property color surface1: theme.surface1
+    readonly property color surface2: theme.surface2
     
-    readonly property color mauve: "#cba6f7"
-    readonly property color pink: "#f5c2e7"
-    readonly property color red: "#f38ba8"
-    readonly property color maroon: "#eba0ac"
-    readonly property color peach: "#fab387"
-    readonly property color yellow: "#f9e2af"
-    readonly property color green: "#a6e3a1"
-    readonly property color teal: "#94e2d5"
-    readonly property color sapphire: "#74c7ec"
-    readonly property color blue: "#89b4fa"
+    readonly property color mauve: theme.mauve
+    readonly property color pink: theme.pink
+    readonly property color red: theme.red
+    readonly property color maroon: theme.maroon
+    readonly property color peach: theme.peach
+    readonly property color yellow: theme.yellow
+    readonly property color green: theme.green
+    readonly property color teal: theme.teal
+    readonly property color sapphire: theme.sapphire
+    readonly property color blue: theme.blue
 
     // -------------------------------------------------------------------------
     // STATE & POLLING
@@ -296,7 +300,10 @@ FloatingWindow {
                 MouseArea {
                     id: logoutMa
                     anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                    onClicked: { Quickshell.execDetached(["sh", "-c", "loginctl terminate-user $USER"]); Qt.quit(); }
+                    onClicked: { 
+                        Quickshell.execDetached(["sh", "-c", "loginctl terminate-user $USER"]);
+                        Qt.quit();
+                    }
                 }
             }
 
@@ -574,9 +581,9 @@ FloatingWindow {
                     Repeater {
                         model: ListModel {
                             ListElement { lbl: "Zablokuj"; cmd: "hyprlock"; icon: "󰌾"; c1: "#cba6f7"; c2: "#f5c2e7" }
-                            ListElement { lbl: "Uśpij"; cmd: "hyprlock & systemctl suspend"; icon: "ᶻ 𝗓 𐰁"; c1: "#89b4fa"; c2: "#74c7ec" }
+                            ListElement { lbl: "Uśpij"; cmd: "hyprlock && systemctl suspend"; icon: "ᶻ 𝗓 𐰁"; c1: "#89b4fa"; c2: "#74c7ec" }
                             ListElement { lbl: "Restart"; cmd: "systemctl reboot"; icon: "󰑓"; c1: "#f9e2af"; c2: "#fab387" }
-                            ListElement { lbl: "Wyłącz"; cmd: "systemctl poweroff"; icon: "󰐥"; c1: "#f38ba8"; c2: "#eba0ac" }
+                            ListElement { lbl: "Wyłącz"; cmd: "shutdown now"; icon: "󰐥"; c1: "#f38ba8"; c2: "#eba0ac" }
                         }
                         
                         delegate: Rectangle {
@@ -727,7 +734,10 @@ FloatingWindow {
 
                             Timer {
                                 id: exitTimer; interval: 500 
-                                onTriggered: { Quickshell.execDetached(["sh", "-c", cmd]); Qt.quit(); }
+                                onTriggered: { 
+                                    Quickshell.execDetached(["sh", "-c", cmd]);
+                                    Qt.quit();
+                                }
                             }
                         }
                     }

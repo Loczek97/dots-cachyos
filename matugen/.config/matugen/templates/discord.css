@@ -1,0 +1,23 @@
+/**
+ * @name MatugenTheme
+ * @author TwojeImie
+ * @version 1.0.0
+ * @description Dynamiczny motyw generowany przez Matugena
+ */
+
+:root {
+    --matugen-bg: {{colors.surface.default.hex}};
+    --matugen-fg: {{colors.on_surface.default.hex}};
+    --matugen-primary: {{colors.primary.default.hex}};
+    --matugen-accent: {{colors.secondary.default.hex}};
+}
+
+/* Przykład podstawowego nadpisania kolorów Discorda */
+.theme-dark, .theme-light {
+    --background-primary: var(--matugen-bg);
+    --background-secondary: var(--matugen-bg);
+    --background-tertiary: var(--matugen-bg);
+    --header-primary: var(--matugen-fg);
+    --text-normal: var(--matugen-fg);
+    --brand-experiment: var(--matugen-primary);
+}
