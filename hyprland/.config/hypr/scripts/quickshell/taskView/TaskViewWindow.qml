@@ -5,33 +5,28 @@ import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import qs
-import qs.services
-import qs.modules.common
-import qs.modules.common.functions
-import qs.modules.common.widgets
-import qs.modules.waffle.looks
+import "." as Local
 import "window-layout.js" as WindowLayout
 
-WMouseAreaButton {
+Local.WMouseAreaButton {
     id: root
 
     required property var toplevel
     required property int maxHeight
     required property int maxWidth
 
-    property var hyprlandClient: HyprlandData.clientForToplevel(root.toplevel)
+    property var hyprlandClient: Local.HyprlandData.clientForToplevel(root.toplevel)
     property string address: hyprlandClient?.address
 
-    property string iconName: AppSearch.guessIcon(hyprlandClient?.class)
+    property string iconName: Local.AppSearch.guessIcon(hyprlandClient?.class)
 
-    color: drag.active ? ColorUtils.transparentize(Looks.colors.bg1Base) : (containsMouse ? Looks.colors.bg1Base : Looks.colors.bgPanelFooterBackground)
-    borderColor: ColorUtils.transparentize(Looks.colors.bg2Border, drag.active ? 1 : 0)
-    radius: Looks.radius.xLarge
+    color: drag.active ? Local.ColorUtils.transparentize(Local.Looks.colors.bg1Base) : (containsMouse ? Local.Looks.colors.bg1Base : Local.Looks.colors.bgPanelFooterBackground)
+    borderColor: Local.ColorUtils.transparentize(Local.Looks.colors.bg2Border, drag.active ? 1 : 0)
+    radius: Local.Looks.radius.xLarge
 
     property real titleBarImplicitHeight: titleBar.implicitHeight
     property bool scaleSize: true
-    property size openedSize: WindowLayout.scaleWindow(hyprlandClient, maxWidth, maxHeight);
+    property size openedSize: hyprlandClient ? WindowLayout.scaleWindow(hyprlandClient, maxWidth, maxHeight) : Qt.size(maxWidth, maxHeight)
     property size fullSize: Qt.size(hyprlandClient?.size[0] ?? maxWidth, hyprlandClient?.size[1] ?? maxHeight)
     property size size: scaleSize ? openedSize : fullSize
     implicitWidth: Math.max(Math.round(contentItem.implicitWidth), 138)
@@ -68,9 +63,8 @@ WMouseAreaButton {
     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
     onClicked: event => {
         if (event.button === Qt.LeftButton) {
-            GlobalStates.overviewOpen = false;
             Hyprland.dispatch(`focuswindow address:${root.hyprlandClient?.address}`);
-            GlobalStates.overviewOpen = false;
+            Qt.quit();
         } else if (event.button === Qt.MiddleButton) {
             root.closeWindow();
             event.accepted = true;
@@ -93,20 +87,20 @@ WMouseAreaButton {
             id: titleBar
             opacity: root.drag.active ? 0 : 1
             spacing: 8
-            WAppIcon {
+            Local.WAppIcon {
                 Layout.leftMargin: 10
                 Layout.alignment: Qt.AlignVCenter
                 iconName: root.iconName
                 implicitSize: 16
                 tryCustomIcon: false
             }
-            WText {
+            Local.WText {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
                 elide: Text.ElideRight
                 text: root.hyprlandClient?.title ?? ""
             }
-            CloseButton {
+            Local.CloseButton {
                 implicitWidth: 38
                 implicitHeight: 38
                 padding: 8
@@ -114,7 +108,7 @@ WMouseAreaButton {
             }
         }
 
-        ScreencopyView {
+        Local.ScreencopyView {
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignHCenter
             implicitWidth: Math.round(root.size.width)
@@ -122,10 +116,10 @@ WMouseAreaButton {
             constraintSize: Qt.size(Math.round(root.size.width), Math.round(root.size.height))
 
             Behavior on implicitWidth {
-                animation: Looks.transition.enter.createObject(this)
+                animation: Local.Looks.transition.enter.createObject(this)
             }
             Behavior on implicitHeight {
-                animation: Looks.transition.enter.createObject(this)
+                animation: Local.Looks.transition.enter.createObject(this)
             }
 
             captureSource: root.toplevel ?? null
@@ -133,7 +127,7 @@ WMouseAreaButton {
         }
     }
 
-    WMenu {
+    Local.WMenu {
         id: windowMenu
         downDirection: true
 
@@ -141,14 +135,14 @@ WMouseAreaButton {
             enabled: root.hyprlandClient?.floating
             property bool isPinned: root.hyprlandClient?.pinned
             icon.name: isPinned ? "checkmark" : "empty"
-            text: Translation.tr("Show this window on all desktops")
+            text: Local.Translation.tr("Show this window on all desktops")
             onTriggered: {
                 Hyprland.dispatch(`pin address:${root.hyprlandClient?.address}`);
             }
         }
         Action {
             icon.name: "empty"
-            text: Translation.tr("Close")
+            text: Local.Translation.tr("Close")
             onTriggered: root.closeWindow()
         }
     }

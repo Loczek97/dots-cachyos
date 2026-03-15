@@ -26,7 +26,7 @@ hook = "~/.config/hypr/scripts/qs_manager.sh restart"
 hook = "eww reload"
 
 [config.reload_apps_list.swaync]
-hook = "sleep 1 && swaync-client -rs"
+hook = "sleep 3 && swaync-client -rs"
 
 [templates.colors]
 input_path = "~/.config/matugen/templates/colors.conf"

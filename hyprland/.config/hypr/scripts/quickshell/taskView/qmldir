@@ -1,0 +1,36 @@
+module taskView
+
+# Singletony
+singleton GlobalStates 1.0 GlobalStates.qml
+singleton Looks 1.0 Looks.qml
+singleton Config 1.0 Config.qml
+singleton HyprlandData 1.0 HyprlandData.qml
+singleton ToplevelManager 1.0 ToplevelManager.qml
+singleton ColorUtils 1.0 ColorUtils.qml
+singleton Translation 1.0 Translation.qml
+singleton AppSearch 1.0 AppSearch.qml
+
+# Widgety
+WMouseAreaButton 1.0 widgets/WMouseAreaButton.qml
+WListView 1.0 widgets/WListView.qml
+WText 1.0 widgets/WText.qml
+WAppIcon 1.0 widgets/WAppIcon.qml
+WMenu 1.0 widgets/WMenu.qml
+CloseButton 1.0 widgets/CloseButton.qml
+FluentIcon 1.0 widgets/FluentIcon.qml
+StyledImage 1.0 widgets/StyledImage.qml
+WFadeLoader 1.0 widgets/WFadeLoader.qml
+ScreencopyView 1.0 widgets/ScreencopyView.qml
+
+# Modele
+ScriptModel 1.0 models/ScriptModel.qml
+IndexModel 1.0 models/IndexModel.qml
+
+# IPC
+IpcHandler 1.0 IpcHandler.qml
+
+# Główne komponenty
+WaffleTaskView 1.0 WaffleTaskView.qml
+TaskViewContent 1.0 TaskViewContent.qml
+TaskViewWindow 1.0 TaskViewWindow.qml
+TaskViewWorkspace 1.0 TaskViewWorkspace.qml
