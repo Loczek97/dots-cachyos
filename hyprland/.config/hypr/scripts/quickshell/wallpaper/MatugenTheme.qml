@@ -4,38 +4,38 @@ QtObject {
     // ============================================
     // BASE COLORS (backgrounds)
     // ============================================
-    readonly property color base: "#191114"
-    readonly property color mantle: "#191114"
-    readonly property color crust: "#130c0f"
+    readonly property color base: "#17130b"
+    readonly property color mantle: "#17130b"
+    readonly property color crust: "#120e07"
     
-    readonly property color surface0: "#21191c"
-    readonly property color surface1: "#261d20"
-    readonly property color surface2: "#504348"
+    readonly property color surface0: "#201b13"
+    readonly property color surface1: "#241f17"
+    readonly property color surface2: "#4e4639"
     
     // ============================================
     // OVERLAY COLORS
     // ============================================
-    readonly property color overlay0: "#504348"
-    readonly property color overlay1: "#504348"
-    readonly property color overlay2: "#9d8c91"
+    readonly property color overlay0: "#4e4639"
+    readonly property color overlay1: "#4e4639"
+    readonly property color overlay2: "#9a8f80"
     
     // ============================================
     // TEXT COLORS
     // ============================================
-    readonly property color text: "#eedfe2"
-    readonly property color subtext0: "#9d8c91"
-    readonly property color subtext1: "#d5c2c7"
+    readonly property color text: "#ebe1d4"
+    readonly property color subtext0: "#9a8f80"
+    readonly property color subtext1: "#d1c5b4"
     
     // ============================================
     // ACCENT COLORS (from wallpaper!)
     // ============================================
-    readonly property color primary: "#ffb0cf"
-    readonly property color secondary: "#e1bdc9"
-    readonly property color tertiary: "#f1bb97"
+    readonly property color primary: "#ecc06c"
+    readonly property color secondary: "#d9c4a0"
+    readonly property color tertiary: "#b2cfa8"
     
-    readonly property color primaryContainer: "#6e334e"
-    readonly property color secondaryContainer: "#593f49"
-    readonly property color tertiaryContainer: "#633e23"
+    readonly property color primaryContainer: "#5d4200"
+    readonly property color secondaryContainer: "#53452a"
+    readonly property color tertiaryContainer: "#344d2f"
     
     readonly property color error: "#ffb4ab"
     readonly property color errorContainer: "#93000a"
@@ -44,18 +44,18 @@ QtObject {
     // CATPPUCCIN-STYLE ALIASES
     // Using .light variants for better contrast on dark backgrounds
     // ============================================
-    readonly property color lavender: "#eedfe2"
-    readonly property color blue: "#8a4a66"
-    readonly property color sapphire: "#ffd8e5"
-    readonly property color sky: "#7e5538"
-    readonly property color teal: "#ffdcc5"
-    readonly property color green: "#fed9e5"
-    readonly property color yellow: "#ffd8e5"
-    readonly property color peach: "#ffdcc5"
+    readonly property color lavender: "#ebe1d4"
+    readonly property color blue: "#79590c"
+    readonly property color sapphire: "#ffdea4"
+    readonly property color sky: "#4c6545"
+    readonly property color teal: "#cdebc2"
+    readonly property color green: "#f6e0bb"
+    readonly property color yellow: "#ffdea4"
+    readonly property color peach: "#cdebc2"
     readonly property color maroon: "#ffdad6"
     readonly property color red: "#ffdad6"
-    readonly property color mauve: "#735761"
-    readonly property color pink: "#7e5538"
+    readonly property color mauve: "#6c5c3f"
+    readonly property color pink: "#4c6545"
     readonly property color flamingo: "#ffdad6"
-    readonly property color rosewater: "#ffdcc5"
+    readonly property color rosewater: "#cdebc2"
 }
