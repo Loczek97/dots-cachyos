@@ -4,25 +4,34 @@ EWW=$(which eww)
 CFG="$HOME/.config/eww/bar/"
 FILE="$HOME/.cache/eww_launch.bar"
 
-# Wait for eww daemon to be ready
-wait_for_daemon() {
+# Wait for the bar-specific eww daemon to be ready
+wait_for_bar_daemon() {
 	local max_attempts=30
 	local attempt=0
 	
 	while [ $attempt -lt $max_attempts ]; do
-		if "$EWW" ping &>/dev/null; then
+		if "$EWW" --config "$CFG" ping &>/dev/null; then
 			return 0
 		fi
 		sleep 0.5
 		attempt=$((attempt + 1))
 	done
 	
-	echo "Error: eww daemon did not start after 15 seconds" >&2
+	echo "Error: eww bar daemon did not start after 15 seconds" >&2
 	return 1
 }
 
+ensure_bar_daemon() {
+	if "$EWW" --config "$CFG" ping &>/dev/null; then
+		return 0
+	fi
+
+	"$EWW" --config "$CFG" daemon >/dev/null 2>&1 &
+	wait_for_bar_daemon
+}
+
 run_eww() {
-	wait_for_daemon || exit 1
+	ensure_bar_daemon || exit 1
 	"$EWW" --config "$CFG" open bar
 }
 

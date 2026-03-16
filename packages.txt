@@ -1,0 +1,83 @@
+# System & Window Manager
+hyprland
+hyprland-polkit-agent
+hypridle
+hyprlock
+xdg-desktop-portal-hyprland
+xdg-desktop-portal
+qt6-wayland
+qt6-declarative
+qt6-svg
+qt5ct
+qt6ct
+
+# Shell & UI Elements
+zsh
+zsh-theme-powerlevel10k-git
+cachyos-zsh-config
+nvm
+awww
+swaync
+eww-wayland
+quickshell-git
+rofi-wayland
+rofi-emoji
+wlogout
+wofi
+matugen-bin
+
+# Terminal & Editor
+kitty
+yazi
+
+# Browser
+zen-browser-bin
+
+# File Management
+thunar
+gvfs
+gvfs-mtp
+gvfs-afc
+tumbler
+thunar-archive-plugin
+thunar-volman
+ffmpegthumbnailer
+
+# Media & Visuals
+cava
+fastfetch
+swappy
+grim
+slurp
+wl-clipboard
+playerctl
+imagemagick
+stow
+
+# Hardware Control & Networking
+brightnessctl
+libpulse
+networkmanager
+bluez
+bluez-utils
+blueman
+iw
+iproute2
+
+# Fonts
+ttf-jetbrains-mono-nerd
+ttf-iosevka-nerd
+otf-font-awesome
+
+# Scripts & Dependencies
+bash
+curl
+jq
+python
+python-requests
+udev
+awk
+grep
+sed
+coreutils
+util-linux

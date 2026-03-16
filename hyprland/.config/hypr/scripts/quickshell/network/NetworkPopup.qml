@@ -47,6 +47,36 @@ FloatingWindow {
         } catch(e) {}
     }
 
+    function shellQuote(value) {
+        let s = value === undefined || value === null ? "" : String(value);
+        return "'" + s.replace(/'/g, "'\"'\"'") + "'";
+    }
+
+    function openWifiPasswordPopup(ssid, security) {
+        window.wifiPromptSsid = ssid || "";
+        window.wifiPromptSecurity = security || "WPA2";
+        window.wifiPromptPassword = "";
+        window.wifiPromptError = "";
+        window.wifiPasswordPopupVisible = true;
+    }
+
+    function submitWifiPassword() {
+        if (!window.wifiPromptSsid) return;
+        if (!window.wifiPromptPassword || window.wifiPromptPassword.length < 8) {
+            window.wifiPromptError = "Hasło musi mieć co najmniej 8 znaków";
+            return;
+        }
+
+        window.playSfx("switch.wav");
+        window.wifiPromptError = "";
+        window.busyTask = window.wifiPromptSsid;
+        busyTimeout.start();
+
+        wifiConnectProcess.pendingSsid = window.wifiPromptSsid;
+        wifiConnectProcess.pendingPassword = window.wifiPromptPassword;
+        wifiConnectProcess.running = true;
+    }
+
     // -------------------------------------------------------------------------
     // COLOR MAPPINGS
     // -------------------------------------------------------------------------
@@ -84,6 +114,13 @@ FloatingWindow {
     Timer { id: btPendingReset; interval: 8000; onTriggered: { window.btPowerPending = false; window.expectedBtPower = ""; } }
 
     property bool showInfoView: false
+
+    property bool wifiPasswordPopupVisible: false
+    property string wifiPromptSsid: ""
+    property string wifiPromptSecurity: ""
+    property string wifiPromptPassword: ""
+    property string wifiPromptError: ""
+    property bool wifiPasswordReveal: false
 
     onCurrentConnChanged: {
         // Don't auto-switch to info view, let user choose
@@ -127,6 +164,7 @@ FloatingWindow {
                 name: d.name || d.ssid || "", 
                 icon: d.icon || "",
                 security: d.security || "",
+                requiresPassword: d.requiresPassword !== undefined ? d.requiresPassword : false,
                 action: d.action || "",
                 isInfoNode: d.isInfoNode || false,
                 isActionable: d.isActionable !== undefined ? d.isActionable : false,
@@ -254,6 +292,54 @@ FloatingWindow {
                         } catch(e) { console.log("WiFi parse error:", e) }
                     }
                 }
+            }
+        }
+    }
+
+    Process {
+        id: wifiConnectProcess
+        property string pendingSsid: ""
+        property string pendingPassword: ""
+
+        command: {
+            let base = "LC_ALL=C nmcli device wifi connect " + window.shellQuote(pendingSsid);
+            if (pendingPassword !== "") {
+                base += " password " + window.shellQuote(pendingPassword);
+            }
+            return ["bash", "-lc", base + " 2>&1"];
+        }
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let out = (this.text || "").trim();
+                let lower = out.toLowerCase();
+
+                window.busyTask = "";
+                wifiConnectProcess.pendingPassword = "";
+
+                let needsSecrets = lower.indexOf("secrets were required") !== -1 || lower.indexOf("no secrets") !== -1;
+                let wrongPassword = lower.indexOf("wrong password") !== -1 || lower.indexOf("invalid") !== -1 || lower.indexOf("authentication") !== -1;
+                let success = lower.indexOf("successfully activated") !== -1;
+
+                if (success) {
+                    window.wifiPasswordPopupVisible = false;
+                    window.wifiPromptError = "";
+                    window.playSfx("power_on.wav");
+                } else if (needsSecrets || wrongPassword) {
+                    window.wifiPasswordPopupVisible = true;
+                    window.wifiPromptError = wrongPassword
+                        ? "Nieprawidłowe hasło. Spróbuj ponownie."
+                        : "Ta sieć wymaga hasła";
+                } else if (out.length > 0) {
+                    window.wifiPasswordPopupVisible = true;
+                    window.wifiPromptError = "Nie udało się połączyć: " + out;
+                } else {
+                    window.wifiPasswordPopupVisible = true;
+                    window.wifiPromptError = "Nie udało się połączyć z siecią";
+                }
+
+                wifiPoller.running = true;
             }
         }
     }
@@ -1078,15 +1164,26 @@ FloatingWindow {
                                         floatCard.triggered = false;
                                         drainAnim.start(); 
                                     } else {
-                                        window.busyTask = floatCard.itemId;
-                                        busyTimeout.start();
-                                        
-                                        let cmd = window.activeMode === "wifi"
-                                            ? "nmcli device wifi connect '" + ssid + "'"
-                                            : "bash " + window.scriptsDir + "/bluetooth_panel_logic.sh --connect " + mac
-                                        
-                                        Quickshell.execDetached(["sh", "-c", cmd]);
-                                        if (window.activeMode === "wifi") wifiPoller.running = true; else btPoller.running = true;
+                                        if (window.activeMode === "wifi") {
+                                            let needsPassword = !!security && security !== "--" && security.toLowerCase() !== "none" && requiresPassword;
+                                            if (needsPassword) {
+                                                window.openWifiPasswordPopup(ssid, security);
+                                                floatCard.triggered = false;
+                                                drainAnim.start();
+                                            } else {
+                                                window.busyTask = floatCard.itemId;
+                                                busyTimeout.start();
+                                                wifiConnectProcess.pendingSsid = ssid;
+                                                wifiConnectProcess.pendingPassword = "";
+                                                wifiConnectProcess.running = true;
+                                            }
+                                        } else {
+                                            window.busyTask = floatCard.itemId;
+                                            busyTimeout.start();
+                                            let cmd = "bash " + window.scriptsDir + "/bluetooth_panel_logic.sh --connect " + mac;
+                                            Quickshell.execDetached(["sh", "-c", cmd]);
+                                            btPoller.running = true;
+                                        }
                                     }
                                 }
                             }
@@ -1275,6 +1372,213 @@ FloatingWindow {
                             window.btPower = window.expectedBtPower; // Optimistic
                             Quickshell.execDetached(["bash", window.scriptsDir + "/bluetooth_panel_logic.sh", "--toggle"]);
                             btPoller.running = true;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                visible: window.wifiPasswordPopupVisible
+                opacity: visible ? 1.0 : 0.0
+                color: "#a0000000"
+                z: 100
+                Behavior on opacity { NumberAnimation { duration: 220 } }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        window.wifiPasswordPopupVisible = false;
+                        window.wifiPromptError = "";
+                        window.wifiPromptPassword = "";
+                    }
+                }
+
+                Rectangle {
+                    width: Math.min(parent.width - 80, 500)
+                    height: 285
+                    anchors.centerIn: parent
+                    radius: 22
+                    color: window.base
+                    border.color: window.surface0
+                    border.width: 1
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        opacity: 0.18
+                        gradient: Gradient {
+                            orientation: Gradient.Vertical
+                            GradientStop { position: 0.0; color: window.activeColor }
+                            GradientStop { position: 1.0; color: "transparent" }
+                        }
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 22
+                        spacing: 12
+
+                        Text {
+                            Layout.fillWidth: true
+                            font.family: "JetBrains Mono"
+                            font.weight: Font.Black
+                            font.pixelSize: 18
+                            color: window.text
+                            text: "Podaj hasło Wi-Fi"
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            font.family: "JetBrains Mono"
+                            font.weight: Font.Bold
+                            font.pixelSize: 13
+                            color: window.activeColor
+                            text: window.wifiPromptSsid
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            font.family: "JetBrains Mono"
+                            font.pixelSize: 11
+                            color: window.text
+                            text: "Zabezpieczenie: " + window.wifiPromptSecurity
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.topMargin: 4
+                            height: 52
+                            radius: 14
+                            color: window.crust
+                            border.color: passInput.activeFocus ? window.activeColor : window.surface2
+                            border.width: 1
+                            Behavior on border.color { ColorAnimation { duration: 180 } }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 12
+                                spacing: 10
+
+                                Text {
+                                    font.family: "Iosevka Nerd Font"
+                                    font.pixelSize: 18
+                                    color: window.activeColor
+                                    text: "󰌾"
+                                }
+
+                                TextInput {
+                                    id: passInput
+                                    Layout.fillWidth: true
+                                    font.family: "JetBrains Mono"
+                                    font.pixelSize: 14
+                                    color: window.text
+                                    selectionColor: window.activeColor
+                                    selectedTextColor: window.crust
+                                    echoMode: window.wifiPasswordReveal ? TextInput.Normal : TextInput.Password
+                                    text: window.wifiPromptPassword
+                                    onTextChanged: window.wifiPromptPassword = text
+                                    focus: window.wifiPasswordPopupVisible
+                                    clip: true
+                                    Keys.onReturnPressed: window.submitWifiPassword()
+                                    Keys.onEnterPressed: window.submitWifiPassword()
+                                }
+
+                                Text {
+                                    font.family: "Iosevka Nerd Font"
+                                    font.pixelSize: 18
+                                    color: revealMa.containsMouse ? window.activeGradientSecondary : window.overlay0
+                                    text: window.wifiPasswordReveal ? "󰈈" : "󰈉"
+                                    Behavior on color { ColorAnimation { duration: 180 } }
+                                }
+                            }
+
+                            MouseArea {
+                                id: revealMa
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: 54
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: window.wifiPasswordReveal = !window.wifiPasswordReveal
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            visible: window.wifiPromptError !== ""
+                            font.family: "JetBrains Mono"
+                            font.pixelSize: 11
+                            color: window.red
+                            text: window.wifiPromptError
+                            wrapMode: Text.WordWrap
+                        }
+
+                        Item { Layout.fillHeight: true }
+
+                        RowLayout {
+                            Layout.alignment: Qt.AlignRight
+                            spacing: 10
+
+                            Rectangle {
+                                width: 110
+                                height: 38
+                                radius: 12
+                                color: cancelMa.containsMouse ? window.surface1 : window.mantle
+                                border.color: window.surface2
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    font.family: "JetBrains Mono"
+                                    font.weight: Font.Bold
+                                    font.pixelSize: 12
+                                    color: window.text
+                                    text: "Anuluj"
+                                }
+
+                                MouseArea {
+                                    id: cancelMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        window.wifiPasswordPopupVisible = false;
+                                        window.wifiPromptError = "";
+                                        window.wifiPromptPassword = "";
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: 132
+                                height: 38
+                                radius: 12
+                                gradient: Gradient {
+                                    orientation: Gradient.Horizontal
+                                    GradientStop { position: 0.0; color: window.sapphire }
+                                    GradientStop { position: 1.0; color: window.blue }
+                                }
+                                opacity: window.busyTask === window.wifiPromptSsid ? 0.75 : 1.0
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    font.family: "JetBrains Mono"
+                                    font.weight: Font.Black
+                                    font.pixelSize: 12
+                                    color: window.crust
+                                    text: window.busyTask === window.wifiPromptSsid ? "Łączenie..." : "Połącz"
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    enabled: window.busyTask !== window.wifiPromptSsid
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: window.submitWifiPassword()
+                                }
+                            }
                         }
                     }
                 }

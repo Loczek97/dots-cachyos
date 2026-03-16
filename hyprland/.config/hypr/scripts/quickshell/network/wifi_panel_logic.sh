@@ -21,6 +21,9 @@ get_icon() {
 CACHE_DIR="/tmp/quickshell_network_cache"
 mkdir -p "$CACHE_DIR"
 
+# Build a quick lookup set of already-saved Wi-Fi profiles.
+KNOWN_WIFI_PROFILES="$(LC_ALL=C nmcli -t -f NAME,TYPE connection show 2>/dev/null | awk -F: '$2=="802-11-wireless"{print $1}')"
+
 # Get current connection details using connection show (faster and more reliable)
 CURRENT_CONN=$(LC_ALL=C nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep ':802-11-wireless$' | cut -d: -f1 | head -n1)
 
@@ -94,13 +97,20 @@ NETWORKS_JSON=$(LC_ALL=C timeout 1 nmcli -t -f active,ssid,signal,security devic
     head -n 24 | \
     while IFS=':' read -r ssid signal security; do
         icon=$(get_icon "$signal")
+        requires_password="false"
+        if [[ -n "$security" && "$security" != "--" ]]; then
+            if ! printf '%s\n' "$KNOWN_WIFI_PROFILES" | grep -Fxq "$ssid"; then
+                requires_password="true"
+            fi
+        fi
         jq -n \
            --arg id "$ssid" \
            --arg ssid "$ssid" \
            --arg icon "$icon" \
            --arg signal "$signal" \
            --arg security "$security" \
-           '{id: $id, ssid: $ssid, icon: $icon, signal: $signal, security: $security}'
+           --argjson requiresPassword "$requires_password" \
+           '{id: $id, ssid: $ssid, icon: $icon, signal: $signal, security: $security, requiresPassword: $requiresPassword}'
     done | jq -s '.')
 
 echo $(jq -n \
