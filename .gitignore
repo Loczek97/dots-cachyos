@@ -1,0 +1,22 @@
+# Matugen generated files
+hyprland/.config/hypr/colors.conf
+kitty/.config/kitty/current-theme.conf
+rofi/.config/rofi/shared/colors.rasi
+eww/.config/eww/bar/matugen-colors.scss
+swaync/.config/swaync/matugen-colors.css
+
+# Matugen generated QML themes (excluding templates)
+**/MatugenTheme.qml
+!matugen/.config/matugen/templates/MatugenTheme.qml
+
+# Zsh / p10k generated colors
+zsh/p10k-colors.zsh
+.p10k-colors.zsh
+
+# Other potential generated files
+**/matugen.theme.css
+
+# System files
+.DS_Store
+*.swp
+*.tmp
