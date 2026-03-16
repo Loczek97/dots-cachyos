@@ -12,9 +12,9 @@
 (defvar weather_view 0)
 
 ;; Media
-(defpoll MEDIA :interval "0.2s" `bash ./scripts/media.sh`)
-(defpoll MUSIC_FULL :interval "0.2s" `bash ./scripts/music_info.sh`)
-(defpoll EQ_DATA :interval "0.2s" `bash ./scripts/equalizer.sh get`)
+(defpoll MEDIA :interval "0.2s" :initial '{"text":"","artist":"","status":"Stopped","artUrl":""}' `bash ./scripts/media.sh`)
+(defpoll MUSIC_FULL :interval "0.2s" :initial '{"title":"Not Playing","artist":"","status":"Stopped","percent":"0","lengthStr":"00:00","positionStr":"00:00","timeStr":"--:-- / --:--","source":"Offline","playerName":"","blur":"","grad":"linear-gradient(45deg, #cba6f7, #89b4fa, #f38ba8, #cba6f7)","textColor":"#cdd6f4","deviceIcon":"","deviceName":"","artUrl":""}' `bash ./scripts/music_info.sh 2>/dev/null | jq -c -e . 2>/dev/null || echo '{"title":"Not Playing","artist":"","status":"Stopped","percent":0,"lengthStr":"00:00","positionStr":"00:00","timeStr":"--:-- / --:--","source":"Offline","playerName":"","blur":"","grad":"linear-gradient(45deg, #cba6f7, #89b4fa, #f38ba8, #cba6f7)","textColor":"#cdd6f4","deviceIcon":"","deviceName":"","artUrl":""}'`)
+(defpoll EQ_DATA :interval "0.2s" :initial '{"pending":"false","preset":"Płaski","b1":0,"b2":0,"b3":0,"b4":0,"b5":0,"b6":0,"b7":0,"b8":0,"b9":0,"b10":0}' `bash ./scripts/equalizer.sh get`)
 
 ;; System Info - Redesigned
 (defpoll WIFI_STATUS :interval "2s" `bash ./scripts/sys_info.sh --wifi-status`)
@@ -27,7 +27,7 @@
 (defvar bt_optimistic_hide false)
 
 ;; DATA VARIABLES FOR NETWORK WIDGET
-(defpoll BLUETOOTH_DATA :interval "1s" `bash ./scripts/bluetooth_panel_logic.sh --status`)
+(defpoll BLUETOOTH_DATA :interval "1s" :initial '{"power":"off","connected":{"name":"","mac":"","icon":"","battery":"0","profile":""},"devices":[]}' `bash ./scripts/bluetooth_panel_logic.sh --status 2>/dev/null | jq -c -e . 2>/dev/null || echo '{"power":"off","connected":{"name":"","mac":"","icon":"","battery":"0","profile":""},"devices":[]}'`)
 (defvar connecting_mac "")
 
 (defpoll WIFI_DATA :interval "3s" :initial "{ \"power\": \"on\", \"connected\": \"null\", \"networks\": [] }" `bash ./scripts/wifi_panel_logic.sh`)

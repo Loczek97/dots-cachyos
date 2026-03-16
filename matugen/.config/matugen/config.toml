@@ -7,9 +7,6 @@ set_wallpaper = false    # Don't set wallpaper (handled by WallpaperPicker)
 type = "scheme-expressive"  # Use expressive colors that change noticeably
 contrast = 1.0              # Maksymalny kontrast dla żywych kolorów
 
-[config.reload_apps_list.dunst]
-hook = "pkill dunst"
-
 [config.reload_apps_list.hyprland]
 hook = "hyprctl reload"
 
@@ -23,10 +20,7 @@ hook = "pkill rofi"
 hook = "~/.config/hypr/scripts/qs_manager.sh restart"
 
 [config.reload_apps_list.eww]
-hook = "eww reload"
-
-[config.reload_apps_list.swaync]
-hook = "sleep 1 && swaync-client -rs"
+hook = "eww --config ~/.config/eww/bar reload"
 
 [templates.colors]
 input_path = "~/.config/matugen/templates/colors.conf"

@@ -162,6 +162,9 @@ FloatingWindow {
 
                      const matugenCmd = "sleep 1 && matugen image '" + originalFile + "' --mode dark --source-color-index 0"
                      Quickshell.execDetached(["bash", "-c", matugenCmd])
+
+                     const reloadSwaync = "sleep 2 && swaync-client -rs"
+                     Quickshell.execDetached(["bash", "-c", reloadSwaync])
                 }
                 
                 Qt.quit()
