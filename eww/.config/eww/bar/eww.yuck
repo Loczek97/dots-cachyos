@@ -55,7 +55,7 @@
              :space-evenly "false" :vexpand "false" :hexpand "false"
             
             (for ws in WORKSPACES
-                (button :onclick "bash ~/.config/hypr/scripts/quickshell/close_eww.sh ${ws.id}"
+              (button :onclick "hyprctl dispatch workspace ${ws.id}"
                         ;; Class is now dynamic: workspace-btn active/occupied/empty
                         :class "workspace-btn ${ws.state}"
                         ;; Tooltip shows the window name!
@@ -160,7 +160,7 @@
          :space-evenly "false"
 
          ;; 2. WiFi
-         (eventbox :onclick "bash ~/.config/hypr/scripts/qs_manager.sh toggle network"
+         (eventbox :onclick "bash ~/.config/scripts/qs_manager.sh toggle network"
                    :onrightclick "nm-connection-editor &"
                    :cursor "pointer"
                    :tooltip {WIFI_STATUS == "enabled" ? (WIFI_SSID != "" ? "Podłączono do ${WIFI_SSID}" : "WiFi włączone") : "WiFi wyłączone"}
@@ -180,7 +180,7 @@
               :space-evenly false
               
               ;; PART A: The Icon (Always Visible)
-              (eventbox :onclick "bash ~/.config/hypr/scripts/qs_manager.sh toggle network"
+              (eventbox :onclick "bash ~/.config/scripts/qs_manager.sh toggle network"
                         :onrightclick "blueman-manager &"
                         :cursor "pointer"
                         :tooltip {BLUETOOTH_DATA.power == "on" ? "Bluetooth Wł." : "Bluetooth Wył."}
@@ -200,7 +200,7 @@
                       (box :width 10)
 
                       ;; Device Name
-                      (eventbox :onclick "bash ~/.config/hypr/scripts/quickshell/network/launch_network.sh"
+                          (eventbox :onclick "bash ~/.config/scripts/qs_manager.sh toggle network"
                                 :onrightclick "blueman-manager &"
                                 :cursor "pointer"
                           (label :class "sys-text" 
@@ -232,7 +232,7 @@
          )
 
         ;; 5. Power
-         (eventbox :onclick "bash ~/.config/hypr/scripts/qs_manager.sh toggle battery"
+         (eventbox :onclick "bash ~/.config/scripts/qs_manager.sh toggle battery"
                    :cursor "pointer"
              (box :class "sys-pill sys-bat" :orientation "h" :spacing 10 :space-evenly false
                   :tooltip "Zarządzanie zasilaniem"
@@ -398,7 +398,7 @@
          :space-evenly "false"
 
         ;; Info section - clickable to open popup
-        (eventbox :onclick "echo 'CLICKED MEDIA' >> /tmp/eww_click_test.log && bash ~/.config/hypr/scripts/qs_manager.sh toggle music"
+        (eventbox :onclick "echo 'CLICKED MEDIA' >> /tmp/eww_click_test.log && bash ~/.config/scripts/qs_manager.sh toggle music"
                   :cursor "pointer"
             (box :orientation "h" :spacing 10 :space-evenly "false"
                 ;; Art
@@ -439,7 +439,7 @@
     )
 )
 (defwidget weather [] 
-    (eventbox :onclick "bash ~/.config/hypr/scripts/qs_manager.sh toggle calendar"
+    (eventbox :onclick "bash ~/.config/scripts/qs_manager.sh toggle calendar"
         (box :class "dockbox"
             (box :class "clockbox" :orientation "v" :spacing 0 :valign "center" 
                  :halign "start" :space-evenly "false" :vexpand "false" :hexpand "false"
