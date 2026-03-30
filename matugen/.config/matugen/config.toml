@@ -5,7 +5,7 @@
 reload_apps = true       # Reload applications after generating colors
 set_wallpaper = false    # Don't set wallpaper (handled by WallpaperPicker)
 type = "scheme-expressive"  # Use expressive colors that change noticeably
-contrast = 1.0              # Maksymalny kontrast dla żywych kolorów
+contrast = 0              # Maksymalny kontrast dla żywych kolorów
 
 [config.reload_apps_list.hyprland]
 hook = "hyprctl reload"
