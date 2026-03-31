@@ -22,6 +22,9 @@ hook = "~/.config/scripts/qs_manager.sh restart"
 [config.reload_apps_list.eww]
 hook = "eww --config ~/.config/eww/bar reload"
 
+[config.reload_apps_list.swaync]
+hook = "~/.config/swaync/reload_swaync.sh"
+
 [templates.colors]
 input_path = "~/.config/matugen/templates/colors.conf"
 output_path = "~/.config/hypr/colors.conf"
@@ -38,33 +41,9 @@ output_path = "~/.config/p10k-colors.zsh"
 input_path = "~/.config/matugen/templates/rofi-colors.rasi"
 output_path = "~/.config/rofi/shared/colors.rasi"
 
-[templates.quickshell_battery]
-input_path = "~/.config/matugen/templates/MatugenTheme.qml"
-output_path = "~/.config/quickshell/battery/MatugenTheme.qml"
-
-[templates.quickshell_calendar]
-input_path = "~/.config/matugen/templates/MatugenTheme.qml"
-output_path = "~/.config/quickshell/calendar/MatugenTheme.qml"
-
-[templates.quickshell_music]
-input_path = "~/.config/matugen/templates/MatugenTheme.qml"
-output_path = "~/.config/quickshell/music/MatugenTheme.qml"
-
-[templates.quickshell_network]
-input_path = "~/.config/matugen/templates/MatugenTheme.qml"
-output_path = "~/.config/quickshell/network/MatugenTheme.qml"
-
-[templates.quickshell_stewart]
-input_path = "~/.config/matugen/templates/MatugenTheme.qml"
-output_path = "~/.config/quickshell/stewart/MatugenTheme.qml"
-
-[templates.quickshell_wallpaper]
-input_path = "~/.config/matugen/templates/MatugenTheme.qml"
-output_path = "~/.config/quickshell/wallpaper/MatugenTheme.qml"
-
-[templates.quickshell_topbar]
-input_path = "~/.config/matugen/templates/quickshell-topbar-colors.qml"
-output_path = "~/.config/quickshell/TopBar/MatugenTheme.qml"
+[templates.quickshell]
+input_path = "~/.config/matugen/templates/colors.json"
+output_path = "~/.config/quickshell/config.json"
 
 [templates.eww_bar]
 input_path = "~/.config/matugen/templates/eww-colors.scss"

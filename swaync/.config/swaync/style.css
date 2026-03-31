@@ -1,301 +1,229 @@
+/* ── 1. Palette & Globals (Using @define-color) ──────────────────── */
+
 @import "matugen-colors.css";
 
+@define-color theme_fg @text;
+/* Primary Text */
+@define-color theme_fg_secondary @subtext0;
+/* Secondary Text */
+@define-color theme_bg @base;
+/* Panel/Background */
+@define-color popup_bg @mantle;
+/* Floating Notification Background */
+@define-color module_bg @surface0;
+/* Default Module Background */
+@define-color module_hover_bg @surface1;
+/* Module Hover */
+@define-color button_bg @surface2;
+/* Button Default */
+@define-color button_hover_bg @overlay0;
+/* Button Hover */
+@define-color accent_color @blue;
+/* Accent Active */
+@define-color accent_color_hover @sky;
+/* Accent Hover */
+@define-color border_light @overlay2;
+@define-color border_dark @crust;
+@define-color border_medium alpha(@border_light, 0.5);
+/* Approx rgba(255, 255, 255, 0.09) */
+@define-color icon_primary @theme_fg;
+@define-color icon_secondary @subtext1;
+@define-color slider_trough_bg @surface1;
+@define-color slider_thumb_bg @text;
+@define-color close_button_bg @surface1;
+@define-color close_button_hover_bg @surface2;
+@define-color mpris_player_bg alpha(@base, 0.5);
+@define-color critical_color @red;
+
+/* ── Base Reset ───────────────────────────────────────────────────── */
 * {
-  font-size: 14px;
-  font-family: "Noto Sans";
-  transition: 100ms;
-  box-shadow: unset;
-}
-
-.control-center .notification-row {
-  background-color: transparent;
-}
-
-.control-center .notification-row .notification-background .notification,
-.control-center .notification-row .notification-background .notification .notification-content,
-.floating-notifications .notification-row .notification-background .notification,
-.floating-notifications.background .notification-background .notification .notification-content {
-  margin-bottom: unset;
-}
-
-.control-center .notification-row .notification-background .notification {
-  margin-top: 0.150rem;
-}
-
-.control-center .notification-row .notification-background .notification box,
-.control-center .notification-row .notification-background .notification widget,
-.control-center .notification-row .notification-background .notification .notification-content,
-.floating-notifications .notification-row .notification-background .notification box,
-.floating-notifications .notification-row .notification-background .notification widget,
-.floating-notifications.background .notification-background .notification .notification-content {
-  border: unset;
-  border-radius: 1.159rem;
-  -gtk-outline-radius: 1.159rem;
-  
-}
-
-.floating-notifications.background .notification-background .notification .notification-content,
-.control-center .notification-background .notification .notification-content {
-  background-color: @surface0;
-  border: 1px solid @surface2;
-  padding: 0.818rem;
-  padding-right: unset;
-  margin-right: unset;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
-}
-
-.control-center .notification-row .notification-background .notification.low .notification-content label,
-.control-center .notification-row .notification-background .notification.normal .notification-content label,
-.floating-notifications.background .notification-background .notification.low .notification-content label,
-.floating-notifications.background .notification-background .notification.normal .notification-content label {
-  color: @text;
-}
-
-.control-center .notification-row .notification-background .notification..notification-content image,
-.control-center .notification-row .notification-background .notification.normal .notification-content image,
-.floating-notifications.background .notification-background .notification.low .notification-content image,
-.floating-notifications.background .notification-background .notification.normal .notification-content image {
-  background-color: unset;
-  color: @sapphire;
-}
-
-.control-center .notification-row .notification-background .notification.low .notification-content .body,
-.control-center .notification-row .notification-background .notification.normal .notification-content .body,
-.floating-notifications.background .notification-background .notification.low .notification-content .body,
-.floating-notifications.background .notification-background .notification.normal .notification-content .body {
-  color: @subtext1;
-}
-
-.control-center .notification-row .notification-background .notification.critical .notification-content,
-.floating-notifications.background .notification-background .notification.critical .notification-content {
-  background-color: @red;
-}
-
-.control-center .notification-row .notification-background .notification.critical .notification-content image,
-.floating-notifications.background .notification-background .notification.critical .notification-content image{
-  background-color: unset;
-  color: @red;
-}
-
-.control-center .notification-row .notification-background .notification.critical .notification-content label,
-.floating-notifications.background .notification-background .notification.critical .notification-content label {
-  color: @crust;
-}
-
-.control-center .notification-row .notification-background .notification .notification-content .summary,
-.floating-notifications.background .notification-background .notification .notification-content .summary {
-  font-family: 'Gabarito', 'Lexend', sans-serif;
-  font-size: 0.9909rem;
-  font-weight: 500;
-}
-
-.control-center .notification-row .notification-background .notification .notification-content .time,
-.floating-notifications.background .notification-background .notification .notification-content .time {
-  font-family: 'Geist', 'AR One Sans', 'Inter', 'Roboto', 'Noto Sans', 'Ubuntu', sans-serif;
-  font-size: 0.8291rem;
-  font-weight: 500;
-  margin-right: 1rem;
-  padding-right: unset;
-}
-
-.control-center .notification-row .notification-background .notification .notification-content .body,
-.floating-notifications.background .notification-background .notification .notification-content .body {
-  font-family: 'Noto Sans', sans-serif;
-  font-size: 0.8891rem;
-  font-weight: 400;
-  margin-top: 0.310rem;
-  padding-right: unset;
-  margin-right: unset;
-}
-
-.control-center .notification-row .close-button,
-.floating-notifications.background .close-button {
-  background-color: unset;
-  border-radius: 100%;
+  font-family: "Inter", "SF Pro Text", sans-serif;
+  font-size: 17px;
+  color: @theme_fg;
   border: none;
+  border-radius: 0;
+  background: none;
   box-shadow: none;
-  margin-right: 13px;
-  margin-top: 6px;
-  margin-bottom: unset;
-  padding-bottom: unset;
-  min-height: 20px;
-  min-width: 20px;
   text-shadow: none;
+  outline: none;
 }
 
-.control-center .notification-row .close-button:hover,
-.floating-notifications.background .close-button:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+box,
+flowbox,
+button,
+label {
+  padding: 0;
+  margin: 0;
 }
 
+/* ── Hide Scrollbars Everywhere ──────────────────────────────────── */
+scrollbar,
+scrollbar slider,
+scrollbar button,
+scrollbar trough,
+scrolledwindow junction {
+  background: none;
+  border: none;
+  opacity: 0;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* ── 2. Control Center Container ─────────────────────────────────── */
 .control-center {
-  border-radius: 1.705rem;
-  -gtk-outline-radius: 1.705rem;
-  border: 1px solid @surface2;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
-  margin: 7px;
-  background-color: @mantle;
-  padding: 1.023rem;
+  background-color: @theme_bg;
+  border-left: 1px solid @border_medium;
+  border-radius: 12px;
+  padding: 12px;
 }
 
-.control-center trough {
-  background-color: @surface1;
-  border-radius: 9999px;
-  -gtk-outline-radius: 9999px;
-  min-width: 0.545rem;
+/* ── 3. Widget Modules ───────────────────────────────────────────── */
+/* General */
+.widget-volume,
+.widget-backlight,
+.widget-buttons-grid,
+.control-center-list>box>*:not(.widget-title) {
+  background-color: @module_bg;
+  border-radius: 12px;
+  margin: 2px 4px;
+  border: 1px solid @border_medium;
 }
 
-.control-center slider {
-  border-radius: 9999px;
-  -gtk-outline-radius: 9999px;
-  min-width: 0.273rem;
-  min-height: 2.045rem;
-  background-color: @overlay2;
+.widget-volume,
+.widget-backlight {
+  padding: 12px 16px;
 }
 
-.control-center slider:hover {
-  background-color: @text;
+.control-center>box>*:last-child {
+  margin-bottom: 0;
 }
 
-.control-center slider:active {
-  background-color: @sapphire;
-}
-
-/* title widget */
-
+/* Title widget */
 .widget-title {
-  padding: 0.341rem;
-  margin: unset;
+  background: transparent;
+  border: none;
+  padding: 2px 8px;
+  margin-bottom: 0px;
 }
 
 .widget-title label {
-  font-family: 'Gabarito', 'Lexend', sans-serif;
-  font-size: 1.364rem;
-  color: @text;
-  margin-left: 0.941rem;
+  font-family: "Noto Sans";
+  font-size: 18px;
+  font-weight: 500;
+  color: @theme_fg_secondary;
+  margin-left: 4px;
+  background: none;
 }
 
 .widget-title button {
-  border: unset;
-  background-color: @sapphire;
-  border-radius: 1.159rem;
-  -gtk-outline-radius: 1.159rem;
-  padding: 0.141rem 0.141rem;
-  margin-right: 0.841rem;
-  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 16px;
+  color: @theme_fg;
+  background-color: @button_bg;
+  border: none;
+  border-radius: 10px;
+  padding: 4px 12px;
+  transition: background-color 0.15s ease;
 }
 
-.widget-title button label {
-  font-family: 'Gabarito', sans-serif;
-  font-size: 1.0409rem;
-  color: @crust;
-  margin-right: 0.841rem;
-}
-
-.widget-title button:hover {
-  background-color: @blue;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
+.widget-title button:hover,
 .widget-title button:active {
-  background-color: @mauve;
+  background-color: @button_hover_bg;
 }
 
-/* Buttons widget */
+/* ── 5. Sliders (Volume, Backlight) ─────────────────────────────── */
+.widget-volume label,
+.widget-backlight label {
+  font-size: 20px;
+  color: @icon_primary;
+  min-width: 20px;
+  margin-right: 10px;
+}
 
+scale {
+  margin: auto 0;
+}
+
+scale trough {
+  min-height: 8px;
+  border-radius: 4px;
+  background-color: @slider_trough_bg;
+}
+
+scale trough progress {
+  min-height: 8px;
+  border-radius: 4px;
+  background-color: @accent_color;
+}
+
+/* ── 6. Button Grid ─────────────────────────────────────────────── */
 .widget-buttons-grid {
-  border-radius: 1.159rem;
-  -gtk-outline-radius: 1.159rem;
-  padding: 0.341rem;
-  background-color: @surface0;
-  padding: unset;
+  padding: 14px 30px; 
+  margin-top: 0px;
 }
 
 .widget-buttons-grid>flowbox {
-  padding: unset;
+  padding: 0;
+  background: none;
 }
 
-.widget-buttons-grid>flowbox>flowboxchild>button:first-child {
-  margin-left:unset ;
+.widget-buttons-grid>flowbox>flowboxchild {
+  padding: 4px 6px; 
+  background: none;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button {
-  border:none;
-  background-color: unset;
-  border-radius: 9999px;
-  min-width: 5.522rem;
-  min-height: 2.927rem;
-  padding: unset;
-  margin: unset;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.widget-buttons-grid>flowbox>flowboxchild>button label {
-  font-family: "Materials Symbol Rounded";
-  font-size: 1.3027rem;
-  color: @text;
+  background-color: @button_bg;
+  border-radius: 50%;
+  padding: 8px;
+  min-width: 42px;
+  min-height: 42px;
+  color: @icon_secondary;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .widget-buttons-grid>flowbox>flowboxchild>button:hover {
-  background-color: rgba(128, 128, 128, 0.3);
+  background-color: @button_hover_bg;
+  color: @icon_primary;
 }
 
-.widget-buttons-grid>flowbox>flowboxchild>button:checked {
-  background-color: @sapphire;
+.widget-buttons-grid>flowbox>flowboxchild>button.toggle:checked {
+  background-color: @accent_color;
+  color: white;
 }
 
-.widget-buttons-grid>flowbox>flowboxchild>button:checked label {
-  color: @crust;
+/* ── 7. Notification Center ─────────────────────────────────────── */
+.control-center-list {
+  background-color: transparent;
 }
 
+.control-center .notification-row {
+  margin-bottom: 4px;
+}
 
-/* Volume widget */
-
-.widget-volume {
-  background-color: @surface0;
+.control-center .notification-background {
+  background-color: @module_bg;
+  border: 1px solid @border_medium;
   padding: 8px;
+  border-radius: 12px;
+}
+
+.control-center .notification .summary {
+  font-weight: 600;
+  color: @theme_fg;
+}
+
+.control-center .notification .body {
+  color: @theme_fg_secondary;
+}
+
+/* ── 8. Floating Notifications ─────────────────────────────────── */
+.floating-notifications .notification-background {
+  background-color: @popup_bg;
+  border: 1px solid @border_light;
+  border-radius: 12px;
+  padding: 12px;
   margin: 8px;
-  border-radius: 1.159rem;
-  -gtk-outline-radius: 1.159rem;
-}
-
-.widget-volume trough {
-  /* OnePlus McClaren edition Orange accent */
-  border:unset;
-  background-color: rgba(128, 128, 128, 0.4);
-}
-
-
-.widget-volume trough slider {
-  color:unset;
-  background-color: @sapphire;
-  border-radius: 100%;
-  min-height: 1.25rem;
-}
-
-
-/* Mpris widget */
-
-.widget-mpris {
-  background-color: @surface0;
-  padding: 8px;
-  margin: 8px;  
-  border-radius: 1.159rem;
-  -gtk-outline-radius: 1.159rem;  
-}
-
-.widget-mpris-player {
-  padding: 8px;
-  margin: 8px;
-}
-
-.widget-mpris-title {
-  font-weight: bold;
-  font-size: 1.25rem;
-}
-
-.widget-mpris-subtitle {
-  font-size: 1.1rem;
 }

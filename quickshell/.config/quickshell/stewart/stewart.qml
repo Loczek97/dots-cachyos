@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Effects
-import "MatugenTheme.qml"
+import "."
 
 Window {
     id: root
