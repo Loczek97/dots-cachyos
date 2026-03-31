@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
-import "MatugenTheme.qml"
+import "."
 
 FloatingWindow {
     id: root
@@ -22,138 +22,62 @@ FloatingWindow {
     // Dynamic Theme from Matugen
     MatugenTheme { id: theme }
 
-    // Theme Color Mappings
+    // Theme Color Mappings - EXACTLY AS IN TASKMANAGER
     readonly property color base: theme.base
-    readonly property color surface0: theme.surface0
-    readonly property color surface1: theme.surface1
-    readonly property color surface2: theme.surface2
-    readonly property color overlay0: theme.overlay0
-    readonly property color overlay1: theme.overlay1
-    readonly property color overlay2: theme.overlay2
+    readonly property color mantle: theme.mantle
+    readonly property color crust: theme.crust
     readonly property color text: theme.text
-    readonly property color subtext0: theme.subtext0
     readonly property color subtext1: theme.subtext1
-    readonly property color blue: theme.blue
-    readonly property color sapphire: theme.sapphire
-    readonly property color lavender: theme.lavender
+    readonly property color subtext0: theme.subtext0
+    readonly property color overlay2: theme.overlay2
+    readonly property color overlay1: theme.overlay1
+    readonly property color overlay0: theme.overlay0
+    readonly property color surface2: theme.surface2
+    readonly property color surface1: theme.surface1
+    readonly property color surface0: theme.surface0
+    
     readonly property color mauve: theme.mauve
     readonly property color pink: theme.pink
-    readonly property color red: theme.red
+    readonly property color blue: theme.blue
+    readonly property color sapphire: theme.sapphire
+    readonly property color peach: theme.peach
     readonly property color yellow: theme.yellow
+    readonly property color teal: theme.teal
+    readonly property color green: theme.green
+    readonly property color red: theme.red
 
     // Data State Properties
     property var musicData: {
         "title": "Loading...", "artist": "", "status": "Stopped", "percent": 0,
         "lengthStr": "00:00", "positionStr": "00:00", "timeStr": "--:-- / --:--",
         "source": "Offline", "playerName": "", "blur": "", "grad": "",
-        "textColor": "#cdd6f4", "deviceIcon": "󰓃", "deviceName": "Speaker",
+        "textColor": root.text, "deviceIcon": "󰓃", "deviceName": "Speaker",
         "artUrl": ""
     }
 
-    property var eqData: {
-        "b1": 0, "b2": 0, "b3": 0, "b4": 0, "b5": 0,
-        "b6": 0, "b7": 0, "b8": 0, "b9": 0, "b10": 0,
-        "preset": "Domyślny", "pending": false
-    }
-
-    // Accumulators for Process standard output
-    property string accumulatedMusicOut: ""
-    property string accumulatedEqOut: ""
-
-    // UI State for debouncing the slider and play button
+    // UI State for debouncing
     property bool userIsSeeking: false
     property bool userToggledPlay: false
 
-    // Decoupled Global Animation States
-    property real catppuccinFlowOffset: 0
-    NumberAnimation on catppuccinFlowOffset {
-        from: 0; to: 1.0
-        duration: 3000
-        loops: Animation.Infinite
-        running: true
-    }
+    // Animation States from TaskManager
+    property real introState: 0.0
+    Behavior on introState { NumberAnimation { duration: 1200; easing.type: Easing.OutExpo } }
+    Component.onCompleted: introState = 1.0
 
     property real globalOrbitAngle: 0
     NumberAnimation on globalOrbitAngle {
-        from: 0; to: Math.PI * 2
-        duration: 90000
-        loops: Animation.Infinite
-        running: true
+        from: 0; to: Math.PI * 2; duration: 90000; loops: Animation.Infinite; running: true
     }
 
-    // Parse the CSS gradient from the bash script into QML hex colors
-    property var borderColors: {
-        var defaultColors = [root.mauve, root.blue, root.red, root.mauve];
-        if (!root.musicData || !root.musicData.grad) return defaultColors;
-        
-        var hexRegex = /#[0-9a-fA-F]{6}/g;
-        var matches = root.musicData.grad.match(hexRegex);
-        
-        if (matches && matches.length >= 3) {
-            return [matches[0], matches[1], matches[2], matches[0]]; // Wrap around for looping
-        }
-        return defaultColors;
-    }
-
-    // --- UTILITIES & OPTIMISTIC UPDATES ---
-    function execCmd(cmdStr) {
-        var safeCmd = cmdStr.replace(/`/g, "\\`");
-        var p = Qt.createQmlObject(`
-            import Quickshell.Io
-            Process {
-                command: ["bash", "-c", \`${safeCmd}\`]
-                running: true
-                onExited: (exitCode) => destroy()
-            }
-        `, root);
-    }
-
-    function applyPresetOptimistically(presetName) {
-        var presets = {
-            "Domyślny": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            "Bass": [5, 7, 5, 2, 1, 0, 0, 0, 1, 2],
-            "Wysokie": [-2, -1, 0, 1, 2, 3, 4, 5, 6, 6],
-            "Wokalny": [-2, -1, 1, 3, 5, 5, 4, 2, 1, 0],
-            "Pop": [2, 4, 2, 0, 1, 2, 4, 2, 1, 2],
-            "Rock": [5, 4, 2, -1, -2, -1, 2, 4, 5, 6],
-            "Jazz": [3, 3, 1, 1, 1, 1, 2, 1, 2, 3],
-            "Klasyczny": [0, 1, 2, 2, 2, 2, 1, 2, 3, 4]
-        };
-        if (presets[presetName]) {
-            var temp = Object.assign({}, root.eqData);
-            for (var i = 0; i < 10; i++) {
-                temp["b" + (i + 1)] = presets[presetName][i];
-            }
-            temp.preset = presetName;
-            temp.pending = false; 
-            root.eqData = temp; 
-            execCmd(`$HOME/.config/quickshell/music/equalizer.sh preset ${presetName}`);
-        }
+    property real catppuccinFlowOffset: 0
+    NumberAnimation on catppuccinFlowOffset {
+        from: 0; to: 1.0; duration: 3000; loops: Animation.Infinite; running: true
     }
 
     // --- DATA POLLING ---
-    Timer {
-        id: seekDebounceTimer
-        interval: 2500 
-        onTriggered: root.userIsSeeking = false
-    }
-
-    Timer {
-        id: playDebounceTimer
-        interval: 1500 // Gives the backend 1.5 seconds to catch up before accepting polled status
-        onTriggered: root.userToggledPlay = false
-    }
-
-    Timer {
-        interval: 500
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            if (!musicProc.running) musicProc.running = true;
-            if (!eqProc.running) eqProc.running = true;
-        }
-    }
+    Timer { id: seekDebounceTimer; interval: 2500; onTriggered: root.userIsSeeking = false }
+    Timer { id: playDebounceTimer; interval: 1500; onTriggered: root.userToggledPlay = false }
+    Timer { interval: 500; running: true; repeat: true; triggeredOnStart: true; onTriggered: if (!musicProc.running) musicProc.running = true }
 
     Process {
         id: musicProc
@@ -166,10 +90,7 @@ FloatingWindow {
                     if (outStr.length > 0) {
                         try { 
                             var newData = JSON.parse(outStr); 
-                            // Ignore polled status if we just toggled it
-                            if (root.userToggledPlay) {
-                                newData.status = root.musicData.status; 
-                            }
+                            if (root.userToggledPlay) newData.status = root.musicData.status; 
                             root.musicData = newData; 
                         } catch(e) {}
                     }
@@ -178,409 +99,215 @@ FloatingWindow {
         }
     }
 
-    Process {
-        id: eqProc
-        running: true
-        command: ["bash", "-c", "$HOME/.config/quickshell/music/equalizer.sh get"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (this.text) {
-                    var outStr = this.text.trim();
-                    if (outStr.length > 0) {
-                        try { root.eqData = JSON.parse(outStr); } catch(e) {}
-                    }
-                }
-            }
-        }
+    function execCmd(cmdStr) {
+        var safeCmd = cmdStr.replace(/`/g, "\\`");
+        Qt.createQmlObject(`import Quickshell.Io; Process { command: ["bash", "-c", \`${safeCmd}\` ]; running: true; onExited: destroy() }`, root);
     }
 
     // --- UI LAYOUT ---
     Item {
         anchors.fill: parent
+        scale: 0.95 + (0.05 * root.introState)
+        opacity: root.introState
 
-        // OUTER ANIMATED BORDER WITH PROPER CLIPPING
-        Item {
+        Rectangle {
             anchors.fill: parent
+            color: root.base
+            radius: 30 // Slightly rounded like TaskManager's sections
+            border.color: root.surface0
+            border.width: 1
+            clip: true
 
-            Rectangle {
-                id: maskRectOuter
-                anchors.fill: parent
-                radius: 15 // Matches inner 12px + 3px margins
-                visible: false
-                layer.enabled: true
-            }
-
-            MultiEffect {
-                source: gradContainer
-                anchors.fill: parent
-                maskEnabled: true
-                maskSource: maskRectOuter
-            }
-
+            // --- AMBIENT BACKGROUND BLOBS (TASKMANAGER STYLE) ---
             Item {
-                id: gradContainer
                 anchors.fill: parent
-                visible: false // Let MultiEffect render it
-
+                z: -1
+                
                 Rectangle {
-                    width: parent.width * 2
-                    height: parent.height * 2
-                    anchors.centerIn: parent
-                    gradient: Gradient {
-                        GradientStop { 
-                            position: 0.0; color: root.borderColors[0] 
-                            Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } }
-                        }
-                        GradientStop { 
-                            position: 0.33; color: root.borderColors[1] 
-                            Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } }
-                        }
-                        GradientStop { 
-                            position: 0.66; color: root.borderColors[2] 
-                            Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } }
-                        }
-                        GradientStop { 
-                            position: 1.0; color: root.borderColors[3] 
-                            Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } }
-                        }
-                    }
-                    NumberAnimation on rotation {
-                        from: 0; to: 360; duration: 5000
+                    width: 400; height: 400; radius: 200
+                    color: root.mauve
+                    opacity: 0.04
+                    x: -100; y: -100
+                    SequentialAnimation on x {
                         loops: Animation.Infinite
-                        running: true
+                        NumberAnimation { to: 0; duration: 15000; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: -100; duration: 15000; easing.type: Easing.InOutSine }
+                    }
+                }
+                Rectangle {
+                    width: 350; height: 350; radius: 175
+                    color: root.sapphire
+                    opacity: 0.04
+                    anchors.right: parent.right; anchors.bottom: parent.bottom
+                    anchors.rightMargin: -80; anchors.bottomMargin: -80
+                    SequentialAnimation on anchors.bottomMargin {
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0; duration: 12000; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: -80; duration: 12000; easing.type: Easing.InOutSine }
+                    }
+                }
+
+                // ROTATING ORBITS (TASKMANAGER STYLE)
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 500; height: 500; radius: 250
+                    color: "transparent"; border.color: root.mauve; border.width: 1; opacity: 0.03
+                    transform: Rotation {
+                        origin.x: 250; origin.y: 250
+                        angle: root.globalOrbitAngle * (180 / Math.PI) * 0.5
+                    }
+                    Canvas {
+                        anchors.fill: parent
+                        onPaint: {
+                            var ctx = getContext("2d"); ctx.clearRect(0,0,width,height); ctx.beginPath();
+                            ctx.arc(width/2, height/2, width/2-1, 0, Math.PI*2);
+                            ctx.strokeStyle = root.mauve; ctx.lineWidth = 4; ctx.setLineDash([20, 60]); ctx.stroke();
+                        }
                     }
                 }
             }
-        }
 
-        // INNER WINDOW BOX
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: 3
-            color: root.base
-            radius: 12
-            clip: true
-
-            // LAYER 1: Background Blur (Smooth fade-in)
-            Image {
+            // --- CONTENT ---
+            RowLayout {
                 anchors.fill: parent
-                source: root.musicData.blur ? "file://" + root.musicData.blur : ""
-                fillMode: Image.PreserveAspectCrop
-                opacity: status === Image.Ready ? 0.6 : 0.0
-                Behavior on opacity { NumberAnimation { duration: 800; easing.type: Easing.InOutQuad } }
-            }
+                anchors.margins: 30
+                spacing: 35
 
-            // LAYER 1.5: Flowing Orbits
-            Rectangle {
-                width: parent.width * 0.8; height: width; radius: width / 2
-                x: (parent.width / 2 - width / 2) + Math.cos(root.globalOrbitAngle * 2) * 150
-                y: (parent.height / 2 - height / 2) + Math.sin(root.globalOrbitAngle * 2) * 100
-                opacity: root.musicData.status === "Playing" ? 0.12 : 0.04
-                color: root.musicData.status === "Playing" ? root.mauve : root.surface2
-                Behavior on color { ColorAnimation { duration: 1000 } }
-                Behavior on opacity { NumberAnimation { duration: 1000 } }
-            }
-            
-            Rectangle {
-                width: parent.width * 0.9; height: width; radius: width / 2
-                x: (parent.width / 2 - width / 2) + Math.sin(root.globalOrbitAngle * 1.5) * -150
-                y: (parent.height / 2 - height / 2) + Math.cos(root.globalOrbitAngle * 1.5) * -100
-                opacity: root.musicData.status === "Playing" ? 0.08 : 0.02
-                color: root.musicData.status === "Playing" ? root.blue : root.surface1
-                Behavior on color { ColorAnimation { duration: 1000 } }
-                Behavior on opacity { NumberAnimation { duration: 1000 } }
-            }
+                // Cover Art
+                Rectangle {
+                    Layout.preferredWidth: 180
+                    Layout.preferredHeight: 180
+                    radius: 90
+                    color: root.surface1
+                    border.width: 3
+                    border.color: root.musicData.status === "Playing" ? root.mauve : root.surface2
+                    
+                    Behavior on border.color { ColorAnimation { duration: 500 } }
 
-            // LAYER 2: UI Content
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 0
-
-                // ==========================================
-                // TOP INFO SECTION
-                // ==========================================
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 200
-                    spacing: 25
-
-                    // Cover Art
+                    // Glow Effect
                     Rectangle {
-                        Layout.preferredWidth: 200
-                        Layout.preferredHeight: 200
-                        Layout.alignment: Qt.AlignVCenter
-                        radius: 100
-                        color: root.surface1
-                        border.width: 4
-                        border.color: root.musicData.status === "Playing" ? root.mauve : root.overlay0
-                        
-                        Behavior on border.color { ColorAnimation { duration: 500 } }
+                        z: -1; anchors.centerIn: parent; width: parent.width + 15; height: parent.height + 15; radius: width / 2
+                        color: root.mauve; opacity: root.musicData.status === "Playing" ? 0.3 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 500 } }
+                        layer.enabled: true
+                        layer.effect: MultiEffect { blurEnabled: true; blurMax: 24; blur: 1.0 }
+                    }
 
-                        // Glow Effect surrounding the thumbnail
-                        Rectangle {
-                            z: -1
-                            anchors.centerIn: parent
-                            width: parent.width + 20
-                            height: parent.height + 20
-                            radius: width / 2
+                    Item {
+                        anchors.fill: parent; anchors.margins: 3
+                        Image { id: artImg; anchors.fill: parent; source: root.musicData.artUrl ? "file://" + root.musicData.artUrl : ""; fillMode: Image.PreserveAspectCrop; visible: false }
+                        Rectangle { id: maskRect; anchors.fill: parent; radius: width / 2; visible: false; layer.enabled: true }
+                        MultiEffect { anchors.fill: parent; source: artImg; maskEnabled: true; maskSource: maskRect; opacity: artImg.status === Image.Ready ? 1.0 : 0.0; Behavior on opacity { NumberAnimation { duration: 800 } } }
+                        Rectangle { width: 36; height: 36; radius: 18; color: root.base; opacity: 0.9; anchors.centerIn: parent }
+                    }
+                    
+                    NumberAnimation on rotation { from: 0; to: 360; duration: 6000; loops: Animation.Infinite; running: true; paused: root.musicData.status !== "Playing" }
+                }
+
+                // Text & Controls
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    ColumnLayout {
+                        spacing: 2
+                        Text {
+                            text: root.musicData.title
+                            color: root.text
+                            font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 22; font.weight: Font.Black
+                            elide: Text.ElideRight; Layout.fillWidth: true
+                        }
+                        Text {
+                            text: root.musicData.artist ? "BY " + root.musicData.artist : ""
                             color: root.mauve
-                            opacity: root.musicData.status === "Playing" ? 0.5 : 0.0
-                            Behavior on opacity { NumberAnimation { duration: 500 } }
-                            layer.enabled: true
-                            layer.effect: MultiEffect {
-                                blurEnabled: true
-                                blurMax: 32
-                                blur: 1.0
-                            }
+                            font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 14; font.weight: Font.Bold
+                            elide: Text.ElideRight; Layout.fillWidth: true
                         }
-
-                        Item {
-                            anchors.fill: parent
-                            anchors.margins: 4
-                            Image {
-                                id: artImg
-                                anchors.fill: parent
-                                source: root.musicData.artUrl ? "file://" + root.musicData.artUrl : ""
-                                fillMode: Image.PreserveAspectCrop
-                                visible: false 
-                            }
+                        RowLayout {
+                            spacing: 10
                             Rectangle {
-                                id: maskRect
-                                anchors.fill: parent
-                                radius: width / 2
-                                visible: false
-                                layer.enabled: true 
+                                Layout.preferredHeight: 22; Layout.preferredWidth: pillContent.width + 16; radius: 8
+                                color: "#08ffffff"; border.color: "#1affffff"; border.width: 1
+                                RowLayout {
+                                    id: pillContent; anchors.centerIn: parent; spacing: 6
+                                    Text { text: root.musicData.deviceIcon || "󰓃"; color: root.mauve; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 13 }
+                                    Text { text: root.musicData.deviceName || "Speaker"; color: root.subtext0; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 11; font.weight: Font.Bold }
+                                }
                             }
-                            MultiEffect {
-                                anchors.fill: parent
-                                source: artImg
-                                maskEnabled: true
-                                maskSource: maskRect
-                                opacity: artImg.status === Image.Ready ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: 800 } }
-                            }
-                            Rectangle {
-                                width: 40; height: 40
-                                radius: 20; color: "#000000"
-                                opacity: 0.8; anchors.centerIn: parent
-                            }
-                        }
-                        
-                        NumberAnimation on rotation {
-                            from: 0; to: 360; duration: 4000
-                            loops: Animation.Infinite
-                            running: true
-                            paused: root.musicData.status !== "Playing"
                         }
                     }
 
+                    // Progress Slider (TaskManager Style)
                     ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        spacing: 15
+                        Layout.fillWidth: true; spacing: 4
+                        Slider {
+                            id: progBar; Layout.fillWidth: true; Layout.preferredHeight: 24; from: 0; to: 100
+                            value: root.musicData.percent || 0
+                            
+                            onPressedChanged: {
+                                if (pressed) { root.userIsSeeking = true; seekDebounceTimer.stop() }
+                                else { root.execCmd(`$HOME/.config/quickshell/music/player_control.sh seek ${value.toFixed(2)} ${root.musicData.length} "${root.musicData.playerName || ""}"`); seekDebounceTimer.restart() }
+                            }
 
-                        ColumnLayout {
-                            spacing: 6
-                            Text {
-                                text: root.musicData.title
-                                color: root.musicData.textColor || root.text
-                                font.family: "JetBrains Mono"
-                                font.pixelSize: 20
-                                font.bold: true
-                                elide: Text.ElideRight
-                                maximumLineCount: 2
-                                wrapMode: Text.Wrap
-                                Layout.fillWidth: true
-                                Behavior on color { ColorAnimation { duration: 600 } }
-                            }
-                            Text {
-                                text: root.musicData.artist ? "BY " + root.musicData.artist : ""
-                                color: root.pink
-                                font.family: "JetBrains Mono"
-                                font.pixelSize: 14
-                                font.bold: true
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                            RowLayout {
-                                spacing: 10
+                            background: Rectangle {
+                                x: progBar.leftPadding; y: progBar.topPadding + (progBar.availableHeight - height) / 2
+                                implicitWidth: 200; implicitHeight: 6; width: progBar.availableWidth; radius: 3; color: root.surface0
                                 Rectangle {
-                                    color: "#1AFFFFFF"
-                                    radius: 4
-                                    Layout.preferredHeight: 24
-                                    Layout.preferredWidth: pillContent.width + 20
-                                    RowLayout {
-                                        id: pillContent
-                                        anchors.centerIn: parent
-                                        spacing: 6
-                                        Text { text: root.musicData.deviceIcon || "󰓃"; color: root.mauve; font.family: "Iosevka Nerd Font"; font.pixelSize: 14 }
-                                        Text { text: root.musicData.deviceName || "Speaker"; color: root.overlay2; font.family: "JetBrains Mono"; font.pixelSize: 12; font.bold: true }
-                                    }
+                                    width: progBar.visualPosition * parent.width; height: parent.height; radius: 3
+                                    color: root.mauve
                                 }
-                                Text {
-                                    text: "PRZEZ " + (root.musicData.source || "Offline")
-                                    color: root.yellow
-                                    font.family: "JetBrains Mono"
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    font.italic: true
-                                }
+                            }
+                            handle: Rectangle {
+                                x: progBar.leftPadding + progBar.visualPosition * (progBar.availableWidth - width); y: progBar.topPadding + (progBar.availableHeight - height) / 2
+                                width: 14; height: 14; radius: 7; color: root.text
+                                scale: progBar.pressed ? 1.3 : 1.0; Behavior on scale { NumberAnimation { duration: 150 } }
                             }
                         }
-
-                        // Progress Area
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 5
-
-                            Slider {
-                                id: progBar
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 20 
-                                from: 0; to: 100
-
-                                Connections {
-                                    target: root
-                                    function onMusicDataChanged() {
-                                        if (!progBar.pressed && !root.userIsSeeking) {
-                                            if (root.musicData && root.musicData.percent !== undefined) {
-                                                var p = Number(root.musicData.percent);
-                                                if (!isNaN(p)) progBar.value = p;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Behavior on value {
-                                    enabled: !progBar.pressed && !root.userIsSeeking
-                                    NumberAnimation { duration: 400; easing.type: Easing.OutSine }
-                                }
-
-                                onPressedChanged: {
-                                    if (pressed) {
-                                        root.userIsSeeking = true;
-                                        seekDebounceTimer.stop();
-                                    } else {
-                                        var temp = Object.assign({}, root.musicData);
-                                        temp.percent = value;
-                                        root.musicData = temp;
-
-                                        var safePlayer = root.musicData.playerName ? root.musicData.playerName : "";
-                                        root.execCmd(`$HOME/.config/quickshell/music/player_control.sh seek ${value.toFixed(2)} ${root.musicData.length} "${safePlayer}"`);
-                                        
-                                        seekDebounceTimer.restart();
-                                    }
-                                }
-
-                                background: Rectangle {
-                                    x: progBar.leftPadding
-                                    y: progBar.topPadding + (progBar.availableHeight - height) / 2
-                                    implicitWidth: 200 
-                                    implicitHeight: 12
-                                    width: progBar.availableWidth
-                                    height: 12
-                                    radius: 6
-                                    color: "#9911111B"
-
-                                    // FIX 1: The clipping container tightly binds to the handle's exact visual center
-                                    Item {
-                                        width: progBar.handle.x - progBar.background.x + (progBar.handle.width / 2)
-                                        height: parent.height
-                                        clip: true // Sharp cut hidden safely underneath the solid handle
-
-                                        // FIX 2: The fill itself remains full-width so its left-side rounded corners never deform
-                                        Item {
-                                            width: progBar.availableWidth
-                                            height: parent.height
-                                            
-                                            layer.enabled: true
-                                            layer.effect: MultiEffect {
-                                                maskEnabled: true
-                                                maskSource: sliderFillMask
-                                            }
-
-                                            Rectangle {
-                                                id: sliderFillMask
-                                                width: parent.width
-                                                height: parent.height
-                                                radius: 6
-                                                visible: false
-                                                layer.enabled: true 
-                                            }
-
-                                            Rectangle {
-                                                width: 2000
-                                                height: parent.height
-                                                x: -(root.catppuccinFlowOffset * 1000) 
-                                                gradient: Gradient {
-                                                    orientation: Gradient.Horizontal
-                                                    GradientStop { position: 0.0; color: root.mauve }
-                                                    GradientStop { position: 0.166; color: root.blue }
-                                                    GradientStop { position: 0.333; color: root.pink }
-                                                    GradientStop { position: 0.5; color: root.mauve }
-                                                    GradientStop { position: 0.666; color: root.blue }
-                                                    GradientStop { position: 0.833; color: root.pink }
-                                                    GradientStop { position: 1.0; color: root.mauve }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                handle: Rectangle {
-                                    // FIX 3: Using visualPosition ensures the handle doesn't ghost or separate during animations
-                                    x: progBar.leftPadding + progBar.visualPosition * (progBar.availableWidth - width)
-                                    y: progBar.topPadding + (progBar.availableHeight - height) / 2
-                                    implicitWidth: 14 
-                                    implicitHeight: 14
-                                    width: 16; height: 16
-                                    radius: 7; color: root.text
-                                    scale: progBar.pressed ? 1.4 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
-                                }
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Text { text: root.musicData.positionStr || "00:00"; color: root.overlay2; font.family: "JetBrains Mono"; font.bold: true; font.pixelSize: 13 }
-                                Item { Layout.fillWidth: true }
-                                Text { text: root.musicData.lengthStr || "00:00"; color: root.overlay2; font.family: "JetBrains Mono"; font.bold: true; font.pixelSize: 13 }
-                            }
-                        }
-
-                        // Media Controls
                         RowLayout {
-                            Layout.alignment: Qt.AlignHCenter
-                            spacing: 30
-                            MouseArea {
-                                width: 30; height: 30
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.execCmd("playerctl previous")
-                                Text { anchors.centerIn: parent; text: ""; color: parent.pressed ? root.text : root.overlay2; font.family: "Iosevka Nerd Font"; font.pixelSize: 24 }
-                            }
-                            MouseArea {
-                                width: 50; height: 50
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    // Trigger debounce lock
-                                    root.userToggledPlay = true;
-                                    playDebounceTimer.restart();
+                            Layout.fillWidth: true
+                            Text { text: root.musicData.positionStr || "00:00"; color: root.overlay2; font.family: "CaskaydiaCove Nerd Font"; font.weight: Font.Bold; font.pixelSize: 11 }
+                            Item { Layout.fillWidth: true }
+                            Text { text: root.musicData.lengthStr || "00:00"; color: root.overlay2; font.family: "CaskaydiaCove Nerd Font"; font.weight: Font.Bold; font.pixelSize: 11 }
+                        }
+                    }
 
-                                    // Optimistic state update for instant visual feedback
-                                    var temp = Object.assign({}, root.musicData);
-                                    temp.status = (temp.status === "Playing" ? "Paused" : "Playing");
-                                    root.musicData = temp;
+                    // Controls
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter; spacing: 40
+                        
+                        MouseArea {
+                            width: 32; height: 32; cursorShape: Qt.PointingHandCursor
+                            Text { anchors.centerIn: parent; text: "󰒮"; color: parent.pressed ? root.text : root.overlay2; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 28 }
+                            onClicked: root.execCmd("playerctl previous")
+                        }
+                        
+                        Rectangle {
+                            width: 54; height: 54; radius: 27
+                            color: playMa.containsMouse ? root.mauve : "#08ffffff"
+                            border.color: "#1affffff"; border.width: 1
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                            scale: playMa.pressed ? 0.9 : (playMa.containsMouse ? 1.1 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+
+                            Text { 
+                                anchors.centerIn: parent; text: root.musicData.status === "Playing" ? "󰏤" : "󰐊"
+                                color: playMa.containsMouse ? root.base : root.text
+                                font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 32 
+                            }
+                            MouseArea { 
+                                id: playMa; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true
+                                onClicked: {
+                                    root.userToggledPlay = true; playDebounceTimer.restart();
+                                    var temp = Object.assign({}, root.musicData); temp.status = (temp.status === "Playing" ? "Paused" : "Playing"); root.musicData = temp;
                                     root.execCmd("playerctl play-pause");
                                 }
-                                Text { anchors.centerIn: parent; text: root.musicData.status === "Playing" ? "" : ""; color: parent.pressed ? root.pink : root.mauve; font.family: "Iosevka Nerd Font"; font.pixelSize: 42 }
                             }
-                            MouseArea {
-                                width: 30; height: 30
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.execCmd("playerctl next")
-                                Text { anchors.centerIn: parent; text: ""; color: parent.pressed ? root.text : root.overlay2; font.family: "Iosevka Nerd Font"; font.pixelSize: 24 }
-                            }
+                        }
+
+                        MouseArea {
+                            width: 32; height: 32; cursorShape: Qt.PointingHandCursor
+                            Text { anchors.centerIn: parent; text: "󰒭"; color: parent.pressed ? root.text : root.overlay2; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 28 }
+                            onClicked: root.execCmd("playerctl next")
                         }
                     }
                 }

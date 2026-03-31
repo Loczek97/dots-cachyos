@@ -184,6 +184,18 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
         exit 0
     fi
 
+    if [[ "$TARGET" == "taskmanager" ]]; then
+        POPUP_PID=$(pgrep -f "quickshell.*TaskManager/TaskManager.qml" 2>/dev/null)
+        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
+            kill $POPUP_PID 2>/dev/null
+        else
+            [ ! -d "$QS_CONFIG/TaskManager" ] && exit 1
+            quickshell -p "$QS_CONFIG/TaskManager/TaskManager.qml" >/dev/null 2>&1 &
+            disown
+        fi
+        exit 0
+    fi
+
     if [[ "$TARGET" == "wallpaper" ]]; then
         PICKER_QML="$QS_CONFIG/wallpaper/WallpaperPicker.qml"
         POPUP_PID=$(pgrep -f "quickshell.*WallpaperPicker\.qml" 2>/dev/null)

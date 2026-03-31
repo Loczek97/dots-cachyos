@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import Quickshell
 import Quickshell.Io
-import "MatugenTheme.qml"
+import "."
 
 FloatingWindow {
     id: window

@@ -171,12 +171,30 @@ else
     # Fallback
     jq -n -c \
     --arg placeholder "$PLACEHOLDER" \
+    --arg mauve "$DEF_MAUVE" \
+    --arg blue "$DEF_BLUE" \
+    --arg red "$DEF_RED" \
+    --arg text "$DEF_TEXT" \
     '{
         title: "Not Playing",
         artist: "",
         status: "Stopped",
         percent: 0,
         lengthStr: "00:00",
+        positionStr: "00:00",
+        timeStr: "--:-- / --:--",
+        source: "Offline",
+        playerName: "",
+        blur: $placeholder,
+        grad: ("linear-gradient(45deg, " + $mauve + ", " + $blue + ", " + $red + ", " + $mauve + ")"),
+        textColor: $text,
+        deviceIcon: "󰓃",
+        deviceName: "Speaker",
+        artUrl: $placeholder
+    }'
+fi
+
+,
         positionStr: "00:00",
         timeStr: "--:-- / --:--",
         source: "Offline",
