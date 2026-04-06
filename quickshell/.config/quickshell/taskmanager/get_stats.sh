@@ -58,13 +58,24 @@ RAM=$(free | grep Mem | awk '{if ($2 > 0) print $3/$2 * 100.0; else print 0}')
 
 # --- NVIDIA GPU ---
 if command -v nvidia-smi &> /dev/null; then
-    GPU_DATA=$(nvidia-smi --query-gpu=utilization.gpu,utilization.memory --format=csv,noheader,nounits | tr -d ' ')
+    GPU_DATA=$(nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu --format=csv,noheader,nounits | tr -d ' ')
     GPU_UTIL=$(echo $GPU_DATA | cut -d',' -f1)
     GPU_MEM_UTIL=$(echo $GPU_DATA | cut -d',' -f2)
+    GPU_TEMP=$(echo $GPU_DATA | cut -d',' -f3)
 else
     GPU_UTIL=0
     GPU_MEM_UTIL=0
+    GPU_TEMP=0
 fi
+
+# --- CPU TEMP ---
+if command -v sensors &> /dev/null; then
+    CPU_TEMP=$(sensors | grep -E 'Tctl|Package id 0' | head -n 1 | awk '{print $2}' | tr -d '+°C')
+    [ -z "$CPU_TEMP" ] && CPU_TEMP=$(sensors | grep 'temp1' | head -n 1 | awk '{print $2}' | tr -d '+°C')
+else
+    CPU_TEMP=0
+fi
+[ -z "$CPU_TEMP" ] && CPU_TEMP=0
 
 # --- PROCESSES (Real-time CPU using top) ---
 # We use top in batch mode with 2 iterations to get accurate CURRENT usage.
@@ -89,4 +100,4 @@ BEGIN { first=1; printf "[" }
 END { printf "]" }
 ')
 
-echo "{\"cpu\": $CPU, \"ram\": $RAM, \"down\": $DOWNLOAD, \"up\": $UPLOAD, \"gpu\": $GPU_UTIL, \"gpu_mem\": $GPU_MEM_UTIL, \"processes\": $PROCS, \"cpu_cores\": $CORES_JSON}"
+echo "{\"cpu\": $CPU, \"ram\": $RAM, \"down\": $DOWNLOAD, \"up\": $UPLOAD, \"gpu\": $GPU_UTIL, \"gpu_mem\": $GPU_MEM_UTIL, \"cpu_temp\": $CPU_TEMP, \"gpu_temp\": $GPU_TEMP, \"processes\": $PROCS, \"cpu_cores\": $CORES_JSON}"

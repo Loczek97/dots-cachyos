@@ -35,8 +35,9 @@ ShellRoot {
     readonly property color teal: theme.teal
     readonly property color green: theme.green
     readonly property color red: theme.red
+    readonly property color maroon: theme.maroon
 
-    property var stats: ({ "cpu": 0, "ram": 0, "down": 0, "up": 0, "gpu": 0, "gpu_mem": 0, "processes": [], "cpu_cores": [] })
+    property var stats: ({ "cpu": 0, "ram": 0, "down": 0, "up": 0, "gpu": 0, "gpu_mem": 0, "cpu_temp": 0, "gpu_temp": 0, "processes": [], "cpu_cores": [] })
     property int currentTab: 0 
     
     property string sortKey: "cpu"
@@ -268,10 +269,39 @@ ShellRoot {
                                 Item { Layout.fillWidth: true }
                                 
                                 Row {
-                                    spacing: 25
-                                    StatPill { label: "CPU"; value: root.stats.cpu.toFixed(0) + "%"; col: root.mauve }
-                                    StatPill { label: "RAM"; value: root.stats.ram.toFixed(0) + "%"; col: root.sapphire }
-                                    StatPill { label: "GPU"; value: root.stats.gpu + "%"; col: root.green }
+                                    spacing: 15
+                                    
+                                    // CPU Capsule
+                                    Rectangle {
+                                        width: cpuRow.implicitWidth + 30; height: 50; radius: 15
+                                        color: root.surface0; border.color: root.surface1; border.width: 1
+                                        Row {
+                                            id: cpuRow; anchors.centerIn: parent; spacing: 20
+                                            StatPill { label: "CPU"; value: root.stats.cpu.toFixed(0) + "%"; col: root.mauve }
+                                            StatPill { label: "TEMP"; value: parseFloat(root.stats.cpu_temp).toFixed(0) + "°C"; col: root.peach }
+                                        }
+                                    }
+
+                                    // RAM Capsule
+                                    Rectangle {
+                                        width: ramRow.implicitWidth + 30; height: 50; radius: 15
+                                        color: root.surface0; border.color: root.surface1; border.width: 1
+                                        Row {
+                                            id: ramRow; anchors.centerIn: parent
+                                            StatPill { label: "RAM"; value: root.stats.ram.toFixed(0) + "%"; col: root.sapphire }
+                                        }
+                                    }
+
+                                    // GPU Capsule
+                                    Rectangle {
+                                        width: gpuRow.implicitWidth + 30; height: 50; radius: 15
+                                        color: root.surface0; border.color: root.surface1; border.width: 1
+                                        Row {
+                                            id: gpuRow; anchors.centerIn: parent; spacing: 20
+                                            StatPill { label: "GPU"; value: root.stats.gpu + "%"; col: root.green }
+                                            StatPill { label: "TEMP"; value: root.stats.gpu_temp + "°C"; col: root.maroon }
+                                        }
+                                    }
                                 }
                             }
                         }

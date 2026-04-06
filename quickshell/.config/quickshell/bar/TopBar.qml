@@ -817,7 +817,7 @@ PanelWindow {
                                         font.strikeout: barWindow.isMuted 
                                     }
                                 }
-                                MouseArea { id: volMouse; acceptedButtons: Qt.LeftButton | Qt.RightButton; hoverEnabled: true; anchors.fill: parent; onClicked: (mouse) => { if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["pavucontrol"]); else if (mouse.button === Qt.RightButton) Quickshell.execDetached(["bash", "-c", "~/.config/quickshell/scripts/sys_info.sh --toggle-mute"]); } }
+                                MouseArea { id: volMouse; acceptedButtons: Qt.LeftButton | Qt.RightButton; hoverEnabled: true; anchors.fill: parent; onClicked: (mouse) => { if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle mixer"]); else if (mouse.button === Qt.RightButton) Quickshell.execDetached(["bash", "-c", "~/.config/quickshell/scripts/sys_info.sh --toggle-mute"]); } }
                             }
 
                             Rectangle {
