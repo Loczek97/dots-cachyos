@@ -78,8 +78,8 @@ handle_network_prep() {
 }
 
 # Ensure TopBar is alive (used by matugen reload hooks too)
-TOPBAR_QML="$QS_CONFIG/TopBar/TopBar.qml"
-BAR_PID=$(pgrep -f "quickshell.*TopBar/TopBar\.qml")
+TOPBAR_QML="$QS_CONFIG/bar/TopBar.qml"
+BAR_PID=$(pgrep -f "quickshell.*bar/TopBar\.qml")
 
 if [[ -z "$BAR_PID" ]] && [[ -f "$TOPBAR_QML" ]]; then
     QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >/dev/null 2>&1 &
@@ -87,7 +87,7 @@ if [[ -z "$BAR_PID" ]] && [[ -f "$TOPBAR_QML" ]]; then
 fi
 
 if [[ "$ACTION" == "restart" ]]; then
-    pkill -f "quickshell.*TopBar/TopBar\.qml" 2>/dev/null
+    pkill -f "quickshell.*bar/TopBar\.qml" 2>/dev/null
     if [[ -f "$TOPBAR_QML" ]]; then
         QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >/dev/null 2>&1 &
         disown
@@ -185,12 +185,24 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
     fi
 
     if [[ "$TARGET" == "taskmanager" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*TaskManager/TaskManager.qml" 2>/dev/null)
+        POPUP_PID=$(pgrep -f "quickshell.*taskmanager/TaskManager.qml" 2>/dev/null)
         if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
             kill $POPUP_PID 2>/dev/null
         else
-            [ ! -d "$QS_CONFIG/TaskManager" ] && exit 1
-            quickshell -p "$QS_CONFIG/TaskManager/TaskManager.qml" >/dev/null 2>&1 &
+            [ ! -d "$QS_CONFIG/taskmanager" ] && exit 1
+            quickshell -p "$QS_CONFIG/taskmanager/TaskManager.qml" >/dev/null 2>&1 &
+            disown
+        fi
+        exit 0
+    fi
+
+    if [[ "$TARGET" == "mixer" ]]; then
+        POPUP_PID=$(pgrep -f "quickshell.*mixer/MixerPopup.qml" 2>/dev/null)
+        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
+            kill $POPUP_PID 2>/dev/null
+        else
+            [ ! -d "$QS_CONFIG/mixer" ] && exit 1
+            quickshell -p "$QS_CONFIG/mixer/MixerPopup.qml" >/dev/null 2>&1 &
             disown
         fi
         exit 0
