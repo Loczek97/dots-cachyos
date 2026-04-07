@@ -9,20 +9,15 @@ import "."
 FloatingWindow {
     id: root
 
-    // Setting title so Hyprland can match title:^(music_win)$
     title: "music_win"
 
-    // Geometry
     implicitWidth: 700
     implicitHeight: 280
 
-    // Make the base window transparent so our rounded corners show properly
     color: "transparent"
 
-    // Dynamic Theme from Matugen
     MatugenTheme { id: theme }
 
-    // Theme Color Mappings - EXACTLY AS IN TASKMANAGER
     readonly property color base: theme.base
     readonly property color mantle: theme.mantle
     readonly property color crust: theme.crust
@@ -113,57 +108,30 @@ FloatingWindow {
         Rectangle {
             anchors.fill: parent
             color: root.base
-            radius: 30 // Slightly rounded like TaskManager's sections
+            radius: 30
             border.color: root.surface0
             border.width: 1
             clip: true
 
-            // --- AMBIENT BACKGROUND BLOBS (TASKMANAGER STYLE) ---
+            // --- BACKGROUND ---
             Item {
                 anchors.fill: parent
-                z: -1
                 
-                Rectangle {
-                    width: 400; height: 400; radius: 200
-                    color: root.mauve
-                    opacity: 0.04
-                    x: -100; y: -100
-                    SequentialAnimation on x {
-                        loops: Animation.Infinite
-                        NumberAnimation { to: 0; duration: 15000; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: -100; duration: 15000; easing.type: Easing.InOutSine }
-                    }
-                }
-                Rectangle {
-                    width: 350; height: 350; radius: 175
-                    color: root.sapphire
-                    opacity: 0.04
-                    anchors.right: parent.right; anchors.bottom: parent.bottom
-                    anchors.rightMargin: -80; anchors.bottomMargin: -80
-                    SequentialAnimation on anchors.bottomMargin {
-                        loops: Animation.Infinite
-                        NumberAnimation { to: 0; duration: 12000; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: -80; duration: 12000; easing.type: Easing.InOutSine }
-                    }
+                Image {
+                    id: bgArtImg
+                    anchors.fill: parent
+                    source: root.musicData.artUrl ? "file://" + root.musicData.artUrl : ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    opacity: 0.3
+                    Behavior on opacity { NumberAnimation { duration: 500 } }
                 }
 
-                // ROTATING ORBITS (TASKMANAGER STYLE)
                 Rectangle {
-                    anchors.centerIn: parent
-                    width: 500; height: 500; radius: 250
-                    color: "transparent"; border.color: root.mauve; border.width: 1; opacity: 0.03
-                    transform: Rotation {
-                        origin.x: 250; origin.y: 250
-                        angle: root.globalOrbitAngle * (180 / Math.PI) * 0.5
-                    }
-                    Canvas {
-                        anchors.fill: parent
-                        onPaint: {
-                            var ctx = getContext("2d"); ctx.clearRect(0,0,width,height); ctx.beginPath();
-                            ctx.arc(width/2, height/2, width/2-1, 0, Math.PI*2);
-                            ctx.strokeStyle = root.mauve; ctx.lineWidth = 4; ctx.setLineDash([20, 60]); ctx.stroke();
-                        }
-                    }
+                    anchors.fill: parent
+                    color: "black"
+                    opacity: bgArtImg.status === Image.Ready ? 0.5 : 0.5
+                    Behavior on opacity { NumberAnimation { duration: 500 } }
                 }
             }
 
@@ -218,8 +186,8 @@ FloatingWindow {
                             elide: Text.ElideRight; Layout.fillWidth: true
                         }
                         Text {
-                            text: root.musicData.artist ? "BY " + root.musicData.artist : ""
-                            color: root.mauve
+                            text: root.musicData.artist ? root.musicData.artist : ""
+                            color: root.subtext1
                             font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 14; font.weight: Font.Bold
                             elide: Text.ElideRight; Layout.fillWidth: true
                         }
