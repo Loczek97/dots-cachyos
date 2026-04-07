@@ -160,11 +160,8 @@ FloatingWindow {
                      const finalCmd = window.awwwCommand.arg(originalFile).arg(randomTransition)
                      Quickshell.execDetached(["bash", "-c", "pkill mpvpaper; " + finalCmd])
 
-                     const matugenCmd = "sleep 1 && matugen image '" + originalFile + "' --mode dark --source-color-index 0"
-                     Quickshell.execDetached(["bash", "-c", matugenCmd])
-
-                     const reloadSwaync = "sleep 2 && swaync-client -rs"
-                     Quickshell.execDetached(["bash", "-c", reloadSwaync])
+                     const matugenCmd = ["matugen", "image", originalFile, "--mode", "dark", "--source-color-index", "0"]
+                     Quickshell.execDetached(["bash", "-c", matugenCmd.join(" ")]);
                 }
                 
                 Qt.quit()

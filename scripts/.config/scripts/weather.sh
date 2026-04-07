@@ -22,7 +22,6 @@ case "$1" in
     --icon)
         ensure_data
         if [ -f "$json_file" ]; then
-            # Calendarowy JSON ma już gotowy glif ikony w forecast[0].icon
             jq -r '.forecast[0].icon' "$json_file" 2>/dev/null || echo ""
         else
             echo ""
@@ -31,7 +30,6 @@ case "$1" in
     --temp)
         ensure_data
         if [ -f "$json_file" ]; then
-            # Używamy dziennej max temperatury (spójne z kalendarzem)
             temp=$(jq -r '.forecast[0].max' "$json_file" 2>/dev/null)
             if [ -n "$temp" ] && [ "$temp" != "null" ]; then
                 echo "${temp}°C"

@@ -81,7 +81,7 @@ handle_network_prep() {
 TOPBAR_QML="$QS_CONFIG/bar/TopBar.qml"
 BAR_PID=$(pgrep -f "quickshell.*bar/TopBar\.qml")
 
-if [[ -z "$BAR_PID" ]] && [[ -f "$TOPBAR_QML" ]]; then
+if [[ -z "$BAR_PID" ]] && [[ -f "$TOPBAR_QML" ]] && [[ "$ACTION" != "restart" ]]; then
     QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >/dev/null 2>&1 &
     disown
 fi
@@ -203,6 +203,18 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
         else
             [ ! -d "$QS_CONFIG/mixer" ] && exit 1
             quickshell -p "$QS_CONFIG/mixer/MixerPopup.qml" >/dev/null 2>&1 &
+            disown
+        fi
+        exit 0
+    fi
+
+    if [[ "$TARGET" == "dashboard" ]]; then
+        POPUP_PID=$(pgrep -f "quickshell.*dashboard/DashboardPopup.qml" 2>/dev/null)
+        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
+            kill $POPUP_PID 2>/dev/null
+        else
+            [ ! -d "$QS_CONFIG/dashboard" ] && exit 1
+            quickshell -p "$QS_CONFIG/dashboard/DashboardPopup.qml" >/dev/null 2>&1 &
             disown
         fi
         exit 0

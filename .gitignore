@@ -2,9 +2,9 @@
 hyprland/.config/hypr/colors.conf
 kitty/.config/kitty/current-theme.conf
 rofi/.config/rofi/shared/colors.rasi
-eww/.config/eww/bar/matugen-colors.scss
 swaync/.config/swaync/matugen-colors.css
-
+quickshell/.config/quickshell/colors.json
+quickshell/.config/quickshell/config.json
 # Matugen generated QML themes (excluding templates)
 **/MatugenTheme.qml
 !matugen/.config/matugen/templates/MatugenTheme.qml
