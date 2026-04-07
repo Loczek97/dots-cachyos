@@ -836,7 +836,7 @@ PanelWindow {
                                 RowLayout { id: batLayoutRow; anchors.centerIn: parent; spacing: 8
                                        Text { text: "󰐥"; font.family: "CaskaydiaCoveNerdFont-Regular"; font.pixelSize: 16; color: theme.green }
                                 }
-                                MouseArea { id: batMouse; hoverEnabled: true; anchors.fill: parent; onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle battery"]) }
+                                MouseArea { id: batMouse; hoverEnabled: true; anchors.fill: parent; onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle dashboard"]) }
                             }
                         }
                     }
