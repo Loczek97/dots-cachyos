@@ -351,6 +351,7 @@ FloatingWindow {
 
             // Giant Breathing Weather Icon
             Text {
+                id: giantWeatherIcon
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: -100
                 text: window.weatherData && window.weatherData.forecast[window.weatherView] ? window.weatherData.forecast[window.weatherView].icon : ""
@@ -367,13 +368,14 @@ FloatingWindow {
                     NumberAnimation { to: -20; duration: 6000; easing.type: Easing.InOutSine }
                     NumberAnimation { to: 0; duration: 6000; easing.type: Easing.InOutSine }
                 }
-                transform: Translate { y: parent.drift }
+                transform: Translate { y: giantWeatherIcon.drift }
             }
 
             // =======================================================
             // CENTRAL HERO: THE BREATHING TIME HUB & 3D HOURLY ORBIT
             // =======================================================
             Item {
+                id: centralTimeHub
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: -100
                 width: 1; height: 1 
@@ -385,7 +387,7 @@ FloatingWindow {
                     NumberAnimation { to: -15; duration: 4000; easing.type: Easing.InOutSine }
                     NumberAnimation { to: 0; duration: 4000; easing.type: Easing.InOutSine }
                 }
-                transform: Translate { y: parent.levitation }
+                transform: Translate { y: centralTimeHub.levitation }
 
                 // The Explicit Dotted Orbit Path Line
                 Canvas {
@@ -688,7 +690,7 @@ FloatingWindow {
                         
                         MouseArea { 
                             id: wPrevMa; width: 30; height: 30; hoverEnabled: true
-                            onClicked: if (window.weatherView > 0) window.weatherView-- 
+                            onClicked: (mouse) => { mouse.accepted = true; if (window.weatherView > 0) window.weatherView-- }
                             
                             property real pulseOffset: 0
                             SequentialAnimation on pulseOffset {
@@ -698,9 +700,10 @@ FloatingWindow {
                             }
                             
                             Text { 
+                                id: wPrevIcon
                                 anchors.centerIn: parent; text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: 18
-                                color: parent.containsMouse ? window.activeWeatherHex : window.overlay1
-                                transform: Translate { x: parent.containsMouse ? -5 : wPrevMa.pulseOffset }
+                                color: wPrevMa.containsMouse ? window.activeWeatherHex : window.overlay1
+                                transform: Translate { x: wPrevMa.containsMouse ? -5 : wPrevMa.pulseOffset }
                                 Behavior on transform { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                             }
                         }
@@ -715,7 +718,7 @@ FloatingWindow {
                         
                         MouseArea { 
                             id: wNextMa; width: 30; height: 30; hoverEnabled: true
-                            onClicked: if (window.weatherView < 4 && window.weatherData) window.weatherView++ 
+                            onClicked: (mouse) => { mouse.accepted = true; if (window.weatherView < 4 && window.weatherData) window.weatherView++ }
                             
                             property real pulseOffset: 0
                             SequentialAnimation on pulseOffset {
@@ -725,9 +728,10 @@ FloatingWindow {
                             }
                             
                             Text { 
+                                id: wNextIcon
                                 anchors.centerIn: parent; text: ""; font.family: "Iosevka Nerd Font"; font.pixelSize: 18
-                                color: parent.containsMouse ? window.activeWeatherHex : window.overlay1
-                                transform: Translate { x: parent.containsMouse ? 5 : wNextMa.pulseOffset }
+                                color: wNextMa.containsMouse ? window.activeWeatherHex : window.overlay1
+                                transform: Translate { x: wNextMa.containsMouse ? 5 : wNextMa.pulseOffset }
                                 Behavior on transform { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
                             }
                         }

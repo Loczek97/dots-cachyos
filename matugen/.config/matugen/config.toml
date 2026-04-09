@@ -1,11 +1,10 @@
 # Matugen Configuration
-# This config generates color palette for Hyprland
 
 [config]
-reload_apps = true          # Reload applications after generating colors
-set_wallpaper = false       # Don't set wallpaper (handled by WallpaperPicker)
-type = "scheme-expressive"  # Use expressive colors that change noticeably
-contrast = 0                # Maksymalny kontrast dla żywych kolorów
+reload_apps = true
+set_wallpaper = false
+type = "scheme-expressive"
+contrast = 0
 
 [config.reload_apps_list.hyprland]
 hook = "hyprctl reload"
@@ -16,43 +15,36 @@ hook = "killall -SIGUSR1 kitty"
 [config.reload_apps_list.rofi]
 hook = "pkill rofi"
 
-[config.reload_apps_list.quickshell]
-hook = "~/.config/scripts/qs_manager.sh restart"
-
-[config.reload_apps_list.eww]
-hook = "eww --config ~/.config/eww/bar reload"
-
 [config.reload_apps_list.swaync]
-hook = "~/.config/swaync/reload_swaync.sh"
+hook = "/home/michal/.config/swaync/reload_swaync.sh"
+
+[config.reload_apps_list.quickshell]
+hook = "/home/michal/.config/scripts/qs_manager.sh restart"
 
 [templates.colors]
-input_path = "~/.config/matugen/templates/colors.conf"
-output_path = "~/.config/hypr/colors.conf"
+input_path = "/home/michal/.config/matugen/templates/colors.conf"
+output_path = "/home/michal/.config/hypr/colors.conf"
 
 [templates.kitty]
-input_path = "~/.config/matugen/templates/kitty.conf"
-output_path = "~/.config/kitty/current-theme.conf"
+input_path = "/home/michal/.config/matugen/templates/kitty.conf"
+output_path = "/home/michal/.config/kitty/current-theme.conf"
 
 [templates.p10k]
-input_path = "~/.config/matugen/templates/p10k-colors.zsh"
-output_path = "~/.config/p10k-colors.zsh"
+input_path = "/home/michal/.config/matugen/templates/p10k-colors.zsh"
+output_path = "/home/michal/.config/p10k-colors.zsh"
 
 [templates.rofi]
-input_path = "~/.config/matugen/templates/rofi-colors.rasi"
-output_path = "~/.config/rofi/shared/colors.rasi"
+input_path = "/home/michal/.config/matugen/templates/rofi-colors.rasi"
+output_path = "/home/michal/.config/rofi/shared/colors.rasi"
 
 [templates.quickshell]
-input_path = "~/.config/matugen/templates/colors.json"
-output_path = "~/.config/quickshell/config.json"
-
-[templates.eww_bar]
-input_path = "~/.config/matugen/templates/eww-colors.scss"
-output_path = "~/.config/eww/bar/matugen-colors.scss"
+input_path = "/home/michal/.config/matugen/templates/colors.json"
+output_path = "/home/michal/.config/quickshell/config.json"
 
 [templates.swaync]
-input_path = "~/.config/matugen/templates/swaync-colors.css"
-output_path = "~/.config/swaync/matugen-colors.css"
+input_path = "/home/michal/.config/matugen/templates/swaync-colors.css"
+output_path = "/home/michal/.config/swaync/matugen-colors.css"
 
 [templates.discord]
-input_path = '~/.config/matugen/templates/discord.css'
-output_path = '~/.config/BetterDiscord/themes/matugen.theme.css'
+input_path = "/home/michal/.config/matugen/templates/discord.css"
+output_path = "/home/michal/.config/BetterDiscord/themes/matugen.theme.css"

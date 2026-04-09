@@ -356,7 +356,7 @@ PanelWindow {
                                     Layout.preferredWidth: infoLayout.implicitWidth
                                     Layout.fillHeight: true
                                     hoverEnabled: true
-                                    onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle music"])
+                                    onClicked: (mouse) => { mouse.accepted = true; Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle music"]); }
                                     
                                     RowLayout {
                                         id: infoLayout
@@ -474,7 +474,7 @@ PanelWindow {
                         id: centerMouse
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle calendar"])
+                        onClicked: (mouse) => { mouse.accepted = true; Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle calendar"]); }
                     }
 
                     RowLayout {
@@ -680,7 +680,7 @@ PanelWindow {
                                         elide: Text.ElideRight
                                     }
                                 }
-                                MouseArea { id: wifiMouse; acceptedButtons: Qt.LeftButton | Qt.RightButton; hoverEnabled: true; anchors.fill: parent; onClicked: (mouse) => { if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle network"]); else if (mouse.button === Qt.RightButton) Quickshell.execDetached(["nm-connection-editor"]); } }
+                                MouseArea { id: wifiMouse; acceptedButtons: Qt.LeftButton | Qt.RightButton; hoverEnabled: true; anchors.fill: parent; onClicked: (mouse) => { mouse.accepted = true; if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle network"]); else if (mouse.button === Qt.RightButton) Quickshell.execDetached(["nm-connection-editor"]); } }
                             }
 
                             Rectangle {
@@ -787,6 +787,7 @@ PanelWindow {
                                     hoverEnabled: true
                                     anchors.fill: parent
                                     onClicked: (mouse) => {
+                                        mouse.accepted = true;
                                         if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle network"]);
                                         else if (mouse.button === Qt.RightButton) Quickshell.execDetached(["blueman-manager"]);
                                     }
@@ -817,7 +818,7 @@ PanelWindow {
                                         font.strikeout: barWindow.isMuted 
                                     }
                                 }
-                                MouseArea { id: volMouse; acceptedButtons: Qt.LeftButton | Qt.RightButton; hoverEnabled: true; anchors.fill: parent; onClicked: (mouse) => { if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle mixer"]); else if (mouse.button === Qt.RightButton) Quickshell.execDetached(["bash", "-c", "~/.config/quickshell/scripts/sys_info.sh --toggle-mute"]); } }
+                                MouseArea { id: volMouse; acceptedButtons: Qt.LeftButton | Qt.RightButton; hoverEnabled: true; anchors.fill: parent; onClicked: (mouse) => { mouse.accepted = true; if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle mixer"]); else if (mouse.button === Qt.RightButton) Quickshell.execDetached(["bash", "-c", "~/.config/quickshell/scripts/sys_info.sh --toggle-mute"]); } }
                             }
 
                             Rectangle {
@@ -836,7 +837,7 @@ PanelWindow {
                                 RowLayout { id: batLayoutRow; anchors.centerIn: parent; spacing: 8
                                        Text { text: "󰐥"; font.family: "CaskaydiaCoveNerdFont-Regular"; font.pixelSize: 16; color: theme.green }
                                 }
-                                MouseArea { id: batMouse; hoverEnabled: true; anchors.fill: parent; onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle dashboard"]) }
+                                MouseArea { id: batMouse; hoverEnabled: true; anchors.fill: parent; onClicked: (mouse) => { mouse.accepted = true; Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle dashboard"]); } }
                             }
                         }
                     }

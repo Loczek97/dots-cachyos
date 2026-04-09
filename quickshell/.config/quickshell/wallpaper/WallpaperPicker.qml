@@ -59,9 +59,6 @@ FloatingWindow {
     readonly property string symlinkCommand: "ln -sf '%1' ~/.config/current_bg"
     
     // MPVPAPER Command Template (OPTIMIZED)
-    // -l auto: Fixes layer issues
-    // --hwdec=auto: Forces GPU usage (Fixes lag)
-    // --no-audio: Prevents audio processing (Saves CPU)
     property string mpvCommand: ""
     
     onHomePathChanged: {
@@ -96,17 +93,14 @@ FloatingWindow {
         preferredHighlightBegin: (width / 2) - (window.itemWidth / 2)
         preferredHighlightEnd: (width / 2) + (window.itemWidth / 2)
         
-        // --- SPEED SETTINGS ---
         highlightMoveDuration: 300
 
         focus: true
 
-        // --- NEW: Snap to active wallpaper on load ---
         property bool initialFocusSet: false
         onCountChanged: {
             if (!initialFocusSet && count > 0) {
                 var idx = window.wallpaperIndex
-                // Only jump if the index exists in the current count
                 if (count > idx) {
                     currentIndex = idx
                     positionViewAtIndex(idx, ListView.Center)
@@ -121,10 +115,6 @@ FloatingWindow {
             nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.webp", "*.gif", "*.mp4", "*.mkv", "*.mov", "*.webm"]
             showDirs: false
             sortField: FolderListModel.Name
-            
-            // Debug: log when folder changes
-            Component.onCompleted: console.log("FolderListModel folder:", folder)
-            onFolderChanged: console.log("Folder changed to:", folder)
         }
 
         Keys.onReturnPressed: {
@@ -148,23 +138,28 @@ FloatingWindow {
                 
                 // Create symlink to current wallpaper
                 const symlinkCmd = window.symlinkCommand.arg(originalFile)
-                Quickshell.execDetached(["bash", "-c", symlinkCmd])
                 
                 if (isVideo) {
                      const finalCmd = window.mpvCommand.arg(originalFile)
-                     Quickshell.execDetached(["bash", "-c", finalCmd])
+                     Quickshell.execDetached(["bash", "-c", symlinkCmd + "; " + finalCmd])
                 } else {
-                     // Generate color palette with matugen for images
-                     
                      const randomTransition = window.transitions[Math.floor(Math.random() * window.transitions.length)]
-                     const finalCmd = window.awwwCommand.arg(originalFile).arg(randomTransition)
-                     Quickshell.execDetached(["bash", "-c", "pkill mpvpaper; " + finalCmd])
-
-                     const matugenCmd = ["matugen", "image", originalFile, "--mode", "dark", "--source-color-index", "0"]
-                     Quickshell.execDetached(["bash", "-c", matugenCmd.join(" ")]);
+                     const awwwCmd = window.awwwCommand.arg(originalFile).arg(randomTransition)
+                     const matugenCmd = "matugen image '" + originalFile + "' --mode dark --source-color-index 0"
+                     
+                     // Picker only triggers wallpaper change and Matugen, then exits.
+                     // Simple and fast call to ensure Hyprland catches the window title correctly.
+                     const fullCmd = "pkill mpvpaper; " + symlinkCmd + "; " + awwwCmd + "; " + matugenCmd + " & disown"
+                     Quickshell.execDetached(["bash", "-c", fullCmd]);
                 }
                 
-                Qt.quit()
+                quitTimer.start()
+            }
+
+            Timer {
+                id: quitTimer
+                interval: 50
+                onTriggered: Qt.quit()
             }
 
             MouseArea {
@@ -192,7 +187,6 @@ FloatingWindow {
                     matrix: Qt.matrix4x4(1, s, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
                 }
 
-                // 1. DYNAMIC BORDER (Background Layer)
                 Image {
                     anchors.fill: parent
                     source: fileUrl
@@ -201,7 +195,6 @@ FloatingWindow {
                     visible: true 
                 }
 
-                // 2. THE IMAGE (Inset Layer)
                 Item {
                     anchors.fill: parent
                     anchors.margins: window.borderWidth 
@@ -225,7 +218,6 @@ FloatingWindow {
                         }
                     }
                     
-                    // 3. VIDEO INDICATOR (Top Right, Subtle)
                     Rectangle {
                         visible: delegateRoot.isVideo
                         anchors.top: parent.top
@@ -235,7 +227,7 @@ FloatingWindow {
                         width: 32
                         height: 32
                         radius: 6
-                        color: "#60000000" // Subtle semi-transparent black
+                        color: "#60000000"
                         
                         transform: Matrix4x4 {
                             property real s: -window.skewFactor

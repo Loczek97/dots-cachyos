@@ -1,18 +1,67 @@
 #!/usr/bin/env bash
 
+# -----------------------------------------------------------------------------
+# DEBUGGING & DEBOUNCE
+# -----------------------------------------------------------------------------
+LOG_FILE="/tmp/qs_debug.log"
+TARGET="$2"
+ACTION="$1"
+LOCK_FILE="/tmp/qs_lock_$TARGET"
+
+# Simple debounce: if called again for the same target within 0.5s, ignore
+if [ -f "$LOCK_FILE" ]; then
+    LAST_CALL=$(cat "$LOCK_FILE")
+    CUR_TIME=$(date +%s%3N)
+    DIFF=$((CUR_TIME - LAST_CALL))
+    if [ $DIFF -lt 500 ]; then
+        echo "Debounce: Ignoring double-call for $TARGET (diff: ${DIFF}ms)" >> "$LOG_FILE"
+        exit 0
+    fi
+fi
+date +%s%3N > "$LOCK_FILE"
+
+echo "--- $(date) ---" >> "$LOG_FILE"
+echo "Call: $0 $@" >> "$LOG_FILE"
+
+# -----------------------------------------------------------------------------
+# CONSTANTS & ARGUMENTS
+# -----------------------------------------------------------------------------
 QS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BT_PID_FILE="$HOME/.cache/bt_scan_pid"
 BT_SCAN_LOG="$HOME/.cache/bt_scan.log"
 SRC_DIR="$HOME/.config/backgrounds"
 THUMB_DIR="$HOME/.cache/wallpaper_picker/thumbs"
 
-IPC_FILE="/tmp/qs_widget_state"
-NETWORK_MODE_FILE="/tmp/qs_network_mode"
-ACTION="$1"
-TARGET="$2"
 SUBTARGET="$3"
-QS_CONFIG="${QS_DIR%/*}/quickshell"
+QS_CONFIG="$HOME/.config/quickshell"
 
+# -----------------------------------------------------------------------------
+# FAST PATH: WORKSPACE SWITCHING
+# -----------------------------------------------------------------------------
+if [[ "$ACTION" =~ ^[0-9]+$ ]]; then
+    WORKSPACE_NUM="$ACTION"
+    MOVE_OPT="$2"
+    
+    if [[ "$MOVE_OPT" == "move" ]]; then
+        hyprctl dispatch movetoworkspace "$WORKSPACE_NUM"
+    else
+        hyprctl dispatch workspace "$WORKSPACE_NUM"
+    fi
+
+    TARGET_ADDR=$(hyprctl clients -j | jq -r ".[] | select(.workspace.id == $WORKSPACE_NUM and (.class | contains(\"qs-master\") | not) and (.title | contains(\"qs-master\") | not)) | .address" | head -n 1)
+
+    if [[ -n "$TARGET_ADDR" && "$TARGET_ADDR" != "null" ]]; then
+        hyprctl --batch "keyword cursor:no_warps true ; dispatch focuswindow address:$TARGET_ADDR ; keyword cursor:no_warps false"
+    else
+        hyprctl --batch "keyword cursor:no_warps true ; dispatch focuswindow qs-master ; keyword cursor:no_warps false"
+    fi
+
+    exit 0
+fi
+
+# -----------------------------------------------------------------------------
+# PREP FUNCTIONS
+# -----------------------------------------------------------------------------
 handle_wallpaper_prep() {
     mkdir -p "$THUMB_DIR"
     (
@@ -77,52 +126,34 @@ handle_network_prep() {
     (nmcli device wifi rescan) &
 }
 
-# Ensure TopBar is alive (used by matugen reload hooks too)
+# -----------------------------------------------------------------------------
+# WATCHDOG: Ensure TopBar is alive
+# -----------------------------------------------------------------------------
 TOPBAR_QML="$QS_CONFIG/bar/TopBar.qml"
-BAR_PID=$(pgrep -f "quickshell.*bar/TopBar\.qml")
+BAR_PID=$(pgrep -u $USER -x quickshell | while read pid; do if ps -fp "$pid" | grep -q "bar/TopBar\.qml"; then echo "$pid"; break; fi; done)
 
-if [[ -z "$BAR_PID" ]] && [[ -f "$TOPBAR_QML" ]] && [[ "$ACTION" != "restart" ]]; then
-    QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >/dev/null 2>&1 &
+if [[ -z "$BAR_PID" ]] && [[ -f "$TOPBAR_QML" ]] && [[ "$ACTION" != "restart" ]] && [[ "$ACTION" != "close" ]]; then
+    echo "Starting TopBar because BAR_PID is empty" >> "$LOG_FILE"
+    QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >> "$LOG_FILE" 2>&1 &
     disown
+    sleep 0.3
 fi
 
 if [[ "$ACTION" == "restart" ]]; then
-    pkill -f "quickshell.*bar/TopBar\.qml" 2>/dev/null
+    pkill -u $USER -x quickshell 2>/dev/null
+    sleep 0.5
     if [[ -f "$TOPBAR_QML" ]]; then
-        QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >/dev/null 2>&1 &
+        QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >> "$LOG_FILE" 2>&1 &
         disown
-        exit 0
     fi
-    exit 1
+    exit 0
 fi
 
 # -----------------------------------------------------------------------------
 # MAIN LOGIC
 # -----------------------------------------------------------------------------
-if [[ "$ACTION" =~ ^[0-9]+$ ]]; then
-    WORKSPACE_NUM="$ACTION"
-    MOVE_OPT="$2"
-    echo "close" > "$IPC_FILE"
-    
-    if [[ "$MOVE_OPT" == "move" ]]; then
-        hyprctl dispatch movetoworkspace "$WORKSPACE_NUM"
-    else
-        hyprctl dispatch workspace "$WORKSPACE_NUM"
-    fi
-
-    TARGET_ADDR=$(hyprctl clients -j | jq -r ".[] | select(.workspace.id == $WORKSPACE_NUM and (.class | contains(\"qs-master\") | not) and (.title | contains(\"qs-master\") | not)) | .address" | head -n 1)
-
-    if [[ -n "$TARGET_ADDR" && "$TARGET_ADDR" != "null" ]]; then
-        hyprctl --batch "keyword cursor:no_warps true ; dispatch focuswindow address:$TARGET_ADDR ; keyword cursor:no_warps false"
-    else
-        hyprctl --batch "keyword cursor:no_warps true ; dispatch focuswindow qs-master ; keyword cursor:no_warps false"
-    fi
-
-    exit 0
-fi
-
 if [[ "$ACTION" == "close" ]]; then
-    echo "close" > "$IPC_FILE"
+    echo "Action: close" >> "$LOG_FILE"
     if [[ "$TARGET" == "network" || "$TARGET" == "all" || -z "$TARGET" ]]; then
         if [ -f "$BT_PID_FILE" ]; then
             kill $(cat "$BT_PID_FILE") 2>/dev/null
@@ -130,110 +161,68 @@ if [[ "$ACTION" == "close" ]]; then
         fi
         bluetoothctl scan off > /dev/null 2>&1
     fi
+    # Kill all popups aggressively
+    pkill -9 -u $USER -f "quickshell.*Popup.qml" 2>/dev/null
+    pkill -9 -u $USER -f "quickshell.*TaskManager.qml" 2>/dev/null
+    pkill -9 -u $USER -f "quickshell.*WallpaperPicker.qml" 2>/dev/null
     exit 0
 fi
 
 if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
-    # Handle popup windows (calendar, music, battery, network)
-    if [[ "$TARGET" == "calendar" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*CalendarPopup.qml" 2>/dev/null)
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            kill $POPUP_PID 2>/dev/null
-        else
-            [ ! -d "$QS_CONFIG/calendar" ] && exit 1
-            quickshell -p "$QS_CONFIG/calendar/CalendarPopup.qml" >/dev/null 2>&1 &
-            disown
-        fi
-        exit 0
+    case "$TARGET" in
+        calendar)     QML="calendar/CalendarPopup.qml" ;;
+        music)        QML="music/MusicPopup.qml" ;;
+        battery)      QML="battery/BatteryPopup.qml" ;;
+        network)      QML="network/NetworkPopup.qml"; handle_network_prep ;;
+        taskmanager)  QML="taskmanager/TaskManager.qml" ;;
+        mixer)        QML="mixer/MixerPopup.qml" ;;
+        dashboard)    QML="dashboard/DashboardPopup.qml" ;;
+        wallpaper)    QML="wallpaper/WallpaperPicker.qml"; handle_wallpaper_prep ;;
+        *)            echo "Unknown target: $TARGET" >> "$LOG_FILE"; exit 1 ;;
+    esac
+
+    FULL_PATH="$QS_CONFIG/$QML"
+    if [ ! -f "$FULL_PATH" ]; then
+        echo "Error: File $FULL_PATH not found" >> "$LOG_FILE"
+        exit 1
     fi
 
-    if [[ "$TARGET" == "music" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*MusicPopup.qml" 2>/dev/null)
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            kill $POPUP_PID 2>/dev/null
-        else
-            [ ! -d "$QS_CONFIG/music" ] && exit 1
-            quickshell -p "$QS_CONFIG/music/MusicPopup.qml" >/dev/null 2>&1 &
-            disown
+    # FIND PROCESS: Must be 'quickshell' AND have our QML in arguments
+    POPUP_PID=$(pgrep -u $USER -x quickshell | while read pid; do
+        if ps -fp "$pid" | grep -qE "\-p.*$QML"; then
+            echo "$pid"
+            break
         fi
-        exit 0
+    done)
+
+    if [[ -n "$POPUP_PID" ]]; then
+        # Check if the window actually exists in Hyprland
+        # Quickshell windows usually have a title or class we can find
+        HAS_WINDOW=$(hyprctl clients -j | jq -r ".[] | select(.pid == $POPUP_PID) | .address")
+        
+        if [[ -z "$HAS_WINDOW" ]]; then
+            echo "Found PID $POPUP_PID but NO WINDOW. Zombie process. Killing -9." >> "$LOG_FILE"
+            kill -9 "$POPUP_PID" 2>/dev/null
+            POPUP_PID="" # Clear it so we start a new one below
+        elif [[ "$ACTION" == "toggle" ]]; then
+            echo "Action: toggle -> Found legitimate PID $POPUP_PID. Killing it." >> "$LOG_FILE"
+            kill "$POPUP_PID" 2>/dev/null
+            # If still alive after 0.5s, force kill
+            (sleep 0.5; kill -9 "$POPUP_PID" 2>/dev/null) &
+            exit 0
+        else
+            echo "Action: open -> Already running with window (PID $POPUP_PID), doing nothing" >> "$LOG_FILE"
+            exit 0
+        fi
     fi
 
-    if [[ "$TARGET" == "battery" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*BatteryPopup.qml" 2>/dev/null)
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            kill $POPUP_PID 2>/dev/null
-        else
-            [ ! -d "$QS_CONFIG/battery" ] && exit 1
-            quickshell -p "$QS_CONFIG/battery/BatteryPopup.qml" >/dev/null 2>&1 &
-            disown
-        fi
-        exit 0
-    fi
-
-    if [[ "$TARGET" == "network" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*NetworkPopup.qml" 2>/dev/null)
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            kill $POPUP_PID 2>/dev/null
-        else
-            [ ! -d "$QS_CONFIG/network" ] && exit 1
-            handle_network_prep &
-            quickshell -p "$QS_CONFIG/network/NetworkPopup.qml" >/dev/null 2>&1 &
-            disown
-        fi
-        exit 0
-    fi
-
-    if [[ "$TARGET" == "taskmanager" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*taskmanager/TaskManager.qml" 2>/dev/null)
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            kill $POPUP_PID 2>/dev/null
-        else
-            [ ! -d "$QS_CONFIG/taskmanager" ] && exit 1
-            quickshell -p "$QS_CONFIG/taskmanager/TaskManager.qml" >/dev/null 2>&1 &
-            disown
-        fi
-        exit 0
-    fi
-
-    if [[ "$TARGET" == "mixer" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*mixer/MixerPopup.qml" 2>/dev/null)
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            kill $POPUP_PID 2>/dev/null
-        else
-            [ ! -d "$QS_CONFIG/mixer" ] && exit 1
-            quickshell -p "$QS_CONFIG/mixer/MixerPopup.qml" >/dev/null 2>&1 &
-            disown
-        fi
-        exit 0
-    fi
-
-    if [[ "$TARGET" == "dashboard" ]]; then
-        POPUP_PID=$(pgrep -f "quickshell.*dashboard/DashboardPopup.qml" 2>/dev/null)
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            kill $POPUP_PID 2>/dev/null
-        else
-            [ ! -d "$QS_CONFIG/dashboard" ] && exit 1
-            quickshell -p "$QS_CONFIG/dashboard/DashboardPopup.qml" >/dev/null 2>&1 &
-            disown
-        fi
-        exit 0
-    fi
-
-    if [[ "$TARGET" == "wallpaper" ]]; then
-        PICKER_QML="$QS_CONFIG/wallpaper/WallpaperPicker.qml"
-        POPUP_PID=$(pgrep -f "quickshell.*WallpaperPicker\.qml" 2>/dev/null)
-
-        if [[ -n "$POPUP_PID" ]] && [[ "$ACTION" == "toggle" ]]; then
-            pkill -f "quickshell.*WallpaperPicker\.qml" 2>/dev/null
-        else
-            [ ! -f "$PICKER_QML" ] && exit 1
-            handle_wallpaper_prep
-            quickshell -p "$PICKER_QML" >/dev/null 2>&1 &
-            disown
-        fi
-    else
-        echo "$TARGET" > "$IPC_FILE"
+    if [[ -z "$POPUP_PID" ]]; then
+        echo "Action: $ACTION -> Starting quickshell -p $FULL_PATH" >> "$LOG_FILE"
+        # Ensure any lingering same-named processes are gone
+        pkill -9 -u $USER -f "quickshell.*$QML" 2>/dev/null
+        
+        QS_NO_RELOAD_POPUP=1 quickshell -p "$FULL_PATH" >> "$LOG_FILE" 2>&1 &
+        disown
     fi
     exit 0
 fi

@@ -10,6 +10,9 @@ FloatingWindow {
     id: powermenuWindow
     title: "dashboard_win"
     
+    width: screen.width                                                      
+    height: screen.height 
+    
     color: "transparent"
 
     MatugenTheme { id: theme }
@@ -35,6 +38,20 @@ FloatingWindow {
     readonly property color teal: theme.teal
     readonly property color green: theme.green
     readonly property color red: theme.red
+
+    // Close on click outside or Escape
+    Shortcut { sequence: "Escape"; onActivated: Qt.quit() }
+    
+    MouseArea {
+        anchors.fill: parent
+        onClicked: Qt.quit()
+    }
+
+    // Full screen semi-transparent background
+    Rectangle {
+        anchors.fill: parent
+        color: "#d0000000" // Dark semi-transparent background
+    }
 
     // -------------------------------------------------------------------------
     // LOGIC
@@ -68,9 +85,9 @@ FloatingWindow {
     }
 
     property var musicData: { 
-        "title": "Offline", 
-        "artist": "Not Playing", 
-        "status": "Stopped", 
+        "title": "Nie odtwarza", 
+        "artist": "Nie odtwarza", 
+        "status": "Zatrzymany", 
         "percent": 0, 
         "lengthStr": "00:00", 
         "positionStr": "00:00", 
