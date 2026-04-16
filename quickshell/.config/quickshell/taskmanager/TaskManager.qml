@@ -37,8 +37,20 @@ ShellRoot {
     readonly property color red: theme.red
     readonly property color maroon: theme.maroon
 
+    // --- SCALING HELPER ---
+    function s(val) {
+        return val * (Quickshell.screens[0].width / 1920.0);
+    }
+
     property var stats: ({ "cpu": 0, "ram": 0, "down": 0, "up": 0, "gpu": 0, "gpu_mem": 0, "cpu_temp": 0, "gpu_temp": 0, "processes": [], "cpu_cores": [] })
     property int currentTab: 0 
+
+    readonly property color tabColor: {
+        if (currentTab === 0) return root.mauve;
+        if (currentTab === 1) return root.sapphire;
+        if (currentTab === 2) return root.blue;
+        return root.green;
+    }
     
     property string sortKey: "cpu"
     property bool sortDesc: true
@@ -106,17 +118,25 @@ ShellRoot {
                 if (txt !== "") {
                     try {
                         let data = JSON.parse(txt);
+                        if (data.processes) {
+                            data.processes.sort((a, b) => {
+                                let valA = a[root.sortKey]; let valB = b[root.sortKey];
+                                if (typeof valA === "string") { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
+                                if (valA < valB) return root.sortDesc ? 1 : -1;
+                                if (valA > valB) return root.sortDesc ? -1 : 1;
+                                return 0;
+                            });
+                        }
+                        let oldY = (typeof processList !== "undefined") ? processList.contentY : 0;
                         root.stats = data;
-                        applySort();
+                        if (typeof processList !== "undefined") processList.contentY = oldY;
                         root.tick++;
-                        
                         if (cpuChart) cpuChart.addData(root.tick, data.cpu);
                         if (ramChart) ramChart.addData(root.tick, data.ram);
                         if (downChart) downChart.addData(root.tick, data.down / (1024*1024), true);
                         if (upChart) upChart.addData(root.tick, data.up / (1024*1024), true);
                         if (gpuChart) gpuChart.addData(root.tick, data.gpu);
                         if (gpuMemChart) gpuMemChart.addData(root.tick, data.gpu_mem);
-                        
                     } catch(e) { }
                 }
             }
@@ -146,36 +166,22 @@ ShellRoot {
                 border.width: 1
                 clip: true
 
-                // --- AMBIENT BACKGROUND BLOBS ---
-                Item {
-                    anchors.fill: parent
-                    z: -1
-                    
-                    Rectangle {
-                        width: 800; height: 800; radius: 400
-                        color: root.mauve
-                        opacity: 0.04
-                        x: -200; y: -200
-                        SequentialAnimation on x {
-                            loops: Animation.Infinite
-                            NumberAnimation { to: 0; duration: 15000; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: -200; duration: 15000; easing.type: Easing.InOutSine }
-                        }
-                    }
-                    Rectangle {
-                        width: 700; height: 700; radius: 350
-                        color: root.sapphire
-                        opacity: 0.04
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.rightMargin: -150
-                        anchors.bottomMargin: -150
-                        SequentialAnimation on anchors.bottomMargin {
-                            loops: Animation.Infinite
-                            NumberAnimation { to: 0; duration: 12000; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: -150; duration: 12000; easing.type: Easing.InOutSine }
-                        }
-                    }
+                // --- BACKGROUND BLOBS (IDENTICAL TO MIXER) ---
+                Rectangle {
+                    width: parent.width * 0.8; height: width; radius: width / 2
+                    x: (parent.width / 2 - width / 2) + Math.cos(root.globalOrbitAngle * 2) * root.s(150)
+                    y: (parent.height / 2 - height / 2) + Math.sin(root.globalOrbitAngle * 2) * root.s(100)
+                    opacity: 0.08
+                    color: root.tabColor
+                    Behavior on color { ColorAnimation { duration: 800 } }
+                }
+                Rectangle {
+                    width: parent.width * 0.9; height: width; radius: width / 2
+                    x: (parent.width / 2 - width / 2) + Math.sin(root.globalOrbitAngle * 1.5) * root.s(-150)
+                    y: (parent.height / 2 - height / 2) + Math.cos(root.globalOrbitAngle * 1.5) * root.s(-100)
+                    opacity: 0.06
+                    color: Qt.lighter(root.tabColor, 1.3)
+                    Behavior on color { ColorAnimation { duration: 800 } }
                 }
 
                 // --- ROTATING ORBITS ---
@@ -187,24 +193,30 @@ ShellRoot {
                         height: width
                         radius: width / 2
                         color: "transparent"
-                        border.color: root.mauve
+                        border.color: root.tabColor
                         border.width: 1
                         opacity: 0.03
+                        Behavior on border.color { ColorAnimation { duration: 800 } }
                         transform: Rotation {
                             origin.x: width / 2; origin.y: height / 2
                             angle: root.globalOrbitAngle * (180 / Math.PI) * (index === 0 ? 0.5 : -0.3)
                         }
                         Canvas {
+                            id: orbitCanvas
                             anchors.fill: parent
                             onPaint: {
                                 var ctx = getContext("2d");
                                 ctx.clearRect(0,0,width,height);
                                 ctx.beginPath();
                                 ctx.arc(width/2, height/2, width/2-1, 0, Math.PI*2);
-                                ctx.strokeStyle = root.mauve;
+                                ctx.strokeStyle = root.tabColor;
                                 ctx.lineWidth = 4;
                                 ctx.setLineDash([20, 60]);
                                 ctx.stroke();
+                            }
+                            Connections {
+                                target: root
+                                function onTabColorChanged() { orbitCanvas.requestPaint(); }
                             }
                         }
                     }
@@ -354,15 +366,26 @@ ShellRoot {
                                         spacing: 6
                                         delegate: Rectangle {
                                             width: processList.width; height: 48; radius: 12
-                                            color: procMa.containsMouse ? root.surface1 : "#05ffffff"
-                                            border.color: procMa.containsMouse ? root.surface2 : "transparent"
-                                            
-                                            Behavior on color { ColorAnimation { duration: 150 } }
-                                            
-                                            MouseArea { id: procMa; anchors.fill: parent; hoverEnabled: true }
-
+                                            color: "transparent"
+                                            Rectangle {
+                                                anchors.fill: parent;
+                                                radius: 12
+                                                clip: true
+                                                color: processMa.containsMouse ? root.surface1 : root.surface0
+                                                border.color: processMa.containsMouse ? root.surface2 : "transparent"
+                                                Behavior on color { ColorAnimation { duration: 150 } }
+                                                MouseArea {
+                                                    id: processMa;
+                                                    anchors.fill: parent;
+                                                    hoverEnabled: true;
+                                                    propagateComposedEvents: true
+                                                }
+                                            }
                                             RowLayout {
-                                                anchors.fill: parent; anchors.leftMargin: 25; anchors.rightMargin: 25; spacing: 10
+                                                anchors.fill: parent;
+                                                anchors.leftMargin: 25;
+                                                anchors.rightMargin: 25;
+                                                spacing: 10
                                                 Text { text: modelData.name; Layout.fillWidth: true; color: root.text; font.family: "CaskaydiaCove Nerd Font"; font.weight: Font.Bold; elide: Text.ElideRight }
                                                 Text { text: modelData.pid; Layout.preferredWidth: 80; color: root.subtext0; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 12 }
                                                 Text { text: modelData.cpu.toFixed(1) + "%"; Layout.preferredWidth: 100; color: modelData.cpu > 20 ? root.red : root.mauve; font.family: "CaskaydiaCove Nerd Font"; font.weight: Font.Black; horizontalAlignment: Text.AlignLeft }
@@ -457,7 +480,12 @@ ShellRoot {
                                         }
                                     }
 
-                                    ChartWidget { id: ramChart; title: "UŻYCIE PAMIĘCI"; valueText: root.stats.ram.toFixed(1) + "%"; accentColor: root.sapphire; maxV: 100 }
+                                    ChartWidget { 
+                                        id: ramChart; 
+                                        title: "UŻYCIE PAMIĘCI: " + root.formatMem(root.stats.ram_used || 0) + "/" + root.formatMem(root.stats.ram_total || 0) + " (" + (root.stats.ram || 0).toFixed(1) + "%)"; 
+                                        valueText: ""; 
+                                        accentColor: root.sapphire; maxV: 100 
+                                    }
                                 }
                             }
 
@@ -474,8 +502,13 @@ ShellRoot {
                             Item {
                                 ColumnLayout {
                                     anchors.fill: parent; anchors.margins: 35; spacing: 30
-                                    ChartWidget { id: gpuChart; title: "GPU NVIDIA"; valueText: root.stats.gpu + "%"; accentColor: root.green; maxV: 100 }
-                                    ChartWidget { id: gpuMemChart; title: "VRAM NVIDIA"; valueText: root.stats.gpu_mem + "%"; accentColor: root.peach; maxV: 100 }
+                                    ChartWidget { id: gpuChart; title: "PROCESOR GRAFICZNY:"; valueText: (root.stats.gpu || 0) + "%"; accentColor: root.green; maxV: 100 }
+                                    ChartWidget { 
+                                        id: gpuMemChart; 
+                                        title: "VRAM: " + ((root.stats.gpu_mem_used || 0) / 1024).toFixed(2) + "/" + ((root.stats.gpu_mem_total || 0) / 1024).toFixed(2) + " GB (" + (root.stats.gpu_mem || 0) + "%)"; 
+                                        valueText: ""; 
+                                        accentColor: root.peach; maxV: 100 
+                                    }
                                 }
                             }
                         }

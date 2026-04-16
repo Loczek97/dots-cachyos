@@ -1,0 +1,48 @@
+:root {
+    --adw-accent-rgb: {{ colors.primary.default.red }} {{ colors.primary.default.green }} {{ colors.primary.default.blue }};
+    --adw-accent-bg-rgb: {{ colors.primary.default.red }} {{ colors.primary.default.green }} {{ colors.primary.default.blue }};
+    --adw-accent-fg-rgb: {{ colors.on_primary.default.red }} {{ colors.on_primary.default.green }} {{ colors.on_primary.default.blue }};
+
+    --adw-window-bg-rgb: {{ colors.background.default.red }} {{ colors.background.default.green }} {{ colors.background.default.blue }};
+    --adw-window-fg-rgb: {{ colors.on_background.default.red }} {{ colors.on_background.default.green }} {{ colors.on_background.default.blue }};
+
+    --adw-headerbar-bg-rgb: {{ colors.surface_container.default.red }} {{ colors.surface_container.default.green }} {{ colors.surface_container.default.blue }};
+    --adw-headerbar-fg-rgb: {{ colors.on_surface.default.red }} {{ colors.on_surface.default.green }} {{ colors.on_surface.default.blue }};
+
+    --adw-popover-bg-rgb: {{ colors.surface_container_high.default.red }} {{ colors.surface_container_high.default.green }} {{ colors.surface_container_high.default.blue }};
+    --adw-popover-fg-rgb: {{ colors.on_surface.default.red }} {{ colors.on_surface.default.green }} {{ colors.on_surface.default.blue }};
+
+    --adw-view-bg-rgb: {{ colors.surface.default.red }} {{ colors.surface.default.green }} {{ colors.surface.default.blue }};
+    --adw-view-fg-rgb: {{ colors.on_surface.default.red }} {{ colors.on_surface.default.green }} {{ colors.on_surface.default.blue }};
+
+    --adw-card-bg-rgb: {{ colors.surface_container_low.default.red }} {{ colors.surface_container_low.default.green }} {{ colors.surface_container_low.default.blue }};
+    --adw-card-fg-rgb: {{ colors.on_surface.default.red }} {{ colors.on_surface.default.green }} {{ colors.on_surface.default.blue }};
+
+    --adw-sidebar-bg-rgb: {{ colors.surface_container_low.default.red }} {{ colors.surface_container_low.default.green }} {{ colors.surface_container_low.default.blue }};
+    --adw-sidebar-fg-rgb: {{ colors.on_surface.default.red }} {{ colors.on_surface.default.green }} {{ colors.on_surface.default.blue }};
+    
+    --adw-sidebar-border-rgb: {{ colors.outline_variant.default.red }} {{ colors.outline_variant.default.green }} {{ colors.outline_variant.default.blue }};
+    --adw-sidebar-backdrop-rgb: {{ colors.background.default.red }} {{ colors.background.default.green }} {{ colors.background.default.blue }};
+}
+
+div[class*="appactionbutton_Green"],
+div[class*="appactionbutton_Blue"] {
+    background: rgb({{ colors.tertiary.default.red }} {{ colors.tertiary.default.green }} {{ colors.tertiary.default.blue }}) !important;
+    color: rgb({{ colors.on_tertiary.default.red }} {{ colors.on_tertiary.default.green }} {{ colors.on_tertiary.default.blue }}) !important;
+}
+
+div[class*="appactionbutton_Green"]:hover,
+div[class*="appactionbutton_Blue"]:hover {
+    filter: brightness(1.15);
+}
+
+div[class*="appactionbutton_Cancel"],
+div[class*="appactionbutton_Stop"] {
+    background: rgb({{ colors.error.default.red }} {{ colors.error.default.green }} {{ colors.error.default.blue }}) !important;
+    color: rgb({{ colors.on_error.default.red }} {{ colors.on_error.default.green }} {{ colors.on_error.default.blue }}) !important;
+}
+
+div[class*="appactionbutton_Cancel"]:hover,
+div[class*="appactionbutton_Stop"]:hover {
+    filter: brightness(1.15);
+}

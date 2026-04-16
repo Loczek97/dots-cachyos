@@ -1,50 +1,65 @@
-# Matugen Configuration
-
 [config]
-reload_apps = true
 set_wallpaper = false
 type = "scheme-expressive"
 contrast = 0
 
-[config.reload_apps_list.hyprland]
-hook = "hyprctl reload"
-
-[config.reload_apps_list.kitty]
-hook = "killall -SIGUSR1 kitty"
-
-[config.reload_apps_list.rofi]
-hook = "pkill rofi"
-
-[config.reload_apps_list.swaync]
-hook = "/home/michal/.config/swaync/reload_swaync.sh"
-
-[config.reload_apps_list.quickshell]
-hook = "/home/michal/.config/scripts/qs_manager.sh restart"
-
 [templates.colors]
-input_path = "/home/michal/.config/matugen/templates/colors.conf"
-output_path = "/home/michal/.config/hypr/colors.conf"
+input_path = "~/.config/matugen/templates/colors.conf"
+output_path = "~/.config/hypr/colors.conf"
+post_hook = "hyprctl reload"
 
 [templates.kitty]
-input_path = "/home/michal/.config/matugen/templates/kitty.conf"
-output_path = "/home/michal/.config/kitty/current-theme.conf"
+input_path = "~/.config/matugen/templates/kitty.conf"
+output_path = "~/.config/kitty/current-theme.conf"
+post_hook = "killall -SIGUSR1 kitty"
 
 [templates.p10k]
-input_path = "/home/michal/.config/matugen/templates/p10k-colors.zsh"
-output_path = "/home/michal/.config/p10k-colors.zsh"
+input_path = "~/.config/matugen/templates/p10k-colors.zsh"
+output_path = "~/.config/p10k-colors.zsh"
 
 [templates.rofi]
-input_path = "/home/michal/.config/matugen/templates/rofi-colors.rasi"
-output_path = "/home/michal/.config/rofi/shared/colors.rasi"
+input_path = "~/.config/matugen/templates/rofi-colors.rasi"
+output_path = "~/.config/rofi/shared/colors.rasi"
+post_hook = "pkill rofi"
 
 [templates.quickshell]
-input_path = "/home/michal/.config/matugen/templates/colors.json"
-output_path = "/home/michal/.config/quickshell/config.json"
+input_path = "~/.config/matugen/templates/colors.json"
+output_path = "~/.config/quickshell/config.json"
 
 [templates.swaync]
-input_path = "/home/michal/.config/matugen/templates/swaync-colors.css"
-output_path = "/home/michal/.config/swaync/matugen-colors.css"
+input_path = "~/.config/matugen/templates/swaync-colors.css"
+output_path = "~/.config/swaync/matugen-colors.css"
+post_hook = "~/.config/swaync/reload_swaync.sh"
 
 [templates.discord]
-input_path = "/home/michal/.config/matugen/templates/discord.css"
-output_path = "/home/michal/.config/BetterDiscord/themes/matugen.theme.css"
+input_path = "~/.config/matugen/templates/discord.css"
+output_path = "~/.config/BetterDiscord/themes/matugen.theme.css"
+
+[templates.spicetify]
+input_path = "~/.config/matugen/templates/spicetify.ini"
+output_path = "~/.config/spicetify/Themes/Sleek/color.ini"
+post_hook = 'spicetify watch -s 2>&1 | sed "/Reloaded Spotify/q"'
+
+[templates.btop]
+input_path = '~/.config/matugen/templates/btop.theme'
+output_path = '~/.config/btop/themes/matugen.theme'
+post_hook = 'pkill -USR2 btop || true'
+
+[templates.steam]
+input_path = '~/.config/matugen/templates/steam.css'
+output_path = '~/.config/AdwSteamGtk/custom.css'
+post_hook =  'adwaita-steam-gtk -i'
+
+[templates.gtk3]
+input_path = '~/.config/matugen/templates/gtk.css'
+output_path = '~/.config/gtk-3.0/colors.css'
+post_hook = 'gsettings set org.gnome.desktop.interface gtk-theme ""; gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-{{mode}}'
+
+[templates.gtk4]
+input_path = '~/.config/matugen/templates/gtk.css'
+output_path = '~/.config/gtk-4.0/colors.css'
+
+[templates.cava]
+input_path = '~/.config/matugen/templates/cava-colors.ini'
+output_path = '~/.config/cava/themes/Matugen'
+post_hook = 'pkill -USR1 cava'

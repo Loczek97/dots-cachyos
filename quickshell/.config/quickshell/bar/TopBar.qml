@@ -519,7 +519,7 @@ PanelWindow {
 
                     Rectangle {
                         height: 48
-                        radius: 24
+                        radius: 14
                         color: theme.surface0
                         border.color: theme.surface2
                         border.width: 1
@@ -616,7 +616,7 @@ PanelWindow {
 
                     Rectangle {
                         height: 48
-                        radius: 24
+                        radius: 14
                         color: theme.surface0
                         border.color: theme.surface2
                         border.width: 1
@@ -635,12 +635,12 @@ PanelWindow {
                             Rectangle {
                                 id: wifiPill
                                 property bool isHovered: wifiMouse.containsMouse
-                                radius: 17; Layout.preferredHeight: sysLayout.pillHeight; 
+                                radius: 10; Layout.preferredHeight: sysLayout.pillHeight; 
                                 color: isHovered ? theme.surface2 : theme.surface1
                                 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: 17
+                                    radius: 10
                                     opacity: barWindow.isWifiOn ? 1.0 : 0.0
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
                                     gradient: Gradient {
@@ -687,13 +687,13 @@ PanelWindow {
                                 id: btPill
                                 property bool isHovered: btMouse.containsMouse
                                 property bool isRevealed: barWindow.isBtOn && barWindow.btDevice !== ""
-                                radius: 17; Layout.preferredHeight: sysLayout.pillHeight
+                                radius: 10; Layout.preferredHeight: sysLayout.pillHeight
                                 clip: true
                                 color: isHovered ? theme.surface2 : theme.surface1
                                 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: 17
+                                    radius: 10
                                     opacity: barWindow.isBtOn ? 1.0 : 0.0
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
                                     gradient: Gradient {
@@ -796,8 +796,8 @@ PanelWindow {
 
                             Rectangle {
                                 property bool isHovered: volMouse.containsMouse
-                                color: barWindow.isMuted ? theme.surface2 : (isHovered ? theme.surface2 : theme.surface1)
-                                radius: 17; Layout.preferredHeight: sysLayout.pillHeight;
+                                color: barWindow.isMuted ? theme.surface1 : (isHovered ? theme.surface2 : theme.surface1)
+                                radius: 10; Layout.preferredHeight: sysLayout.pillHeight;
                                 
                                 property real targetWidth: volLayoutRow.implicitWidth + 24
                                 Layout.preferredWidth: targetWidth
@@ -808,13 +808,19 @@ PanelWindow {
                                 Behavior on color { ColorAnimation { duration: 200 } }
 
                                 RowLayout { id: volLayoutRow; anchors.centerIn: parent; spacing: 8
-                                        Text { text: barWindow.volIcon; font.family: "CaskaydiaCoveNerdFont-Regular"; font.pixelSize: 16; color: barWindow.isMuted ? theme.overlay0 : (volMouse.containsMouse ? theme.rosewater : theme.peach) }
+                                        Text { 
+                                            text: barWindow.isMuted ? "󰝟" : barWindow.volIcon; 
+                                            font.family: "CaskaydiaCoveNerdFont-Regular"; 
+                                            font.pixelSize: 16; 
+                                            color: barWindow.isMuted ? theme.red : (volMouse.containsMouse ? theme.rosewater : theme.peach) 
+                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                        }
                                     Text { 
                                         text: barWindow.volPercent; 
                                         font.family: "CaskaydiaCoveNerdFont-Regular"; 
                                         font.pixelSize: 13; 
                                         font.weight: Font.Black; 
-                                            color: barWindow.isMuted ? theme.overlay0 : theme.text; 
+                                            color: barWindow.isMuted ? theme.subtext0 : theme.text; 
                                         font.strikeout: barWindow.isMuted 
                                     }
                                 }
@@ -824,7 +830,7 @@ PanelWindow {
                             Rectangle {
                                 property bool isHovered: batMouse.containsMouse
                                 color: isHovered ? theme.surface2 : theme.surface1; 
-                                radius: 17; Layout.preferredHeight: sysLayout.pillHeight;
+                                radius: 10; Layout.preferredHeight: sysLayout.pillHeight;
                                 
                                 property real targetWidth: batLayoutRow.implicitWidth + 24
                                 Layout.preferredWidth: targetWidth
