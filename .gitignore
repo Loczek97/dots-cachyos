@@ -5,6 +5,8 @@ rofi/.config/rofi/shared/colors.rasi
 swaync/.config/swaync/matugen-colors.css
 quickshell/.config/quickshell/colors.json
 quickshell/.config/quickshell/config.json
+spicetify/.config/spicetify/Themes/Matugen/color.ini
+btop/.config/btop/themes
 # Matugen generated QML themes (excluding templates)
 **/MatugenTheme.qml
 !matugen/.config/matugen/templates/MatugenTheme.qml

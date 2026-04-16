@@ -140,17 +140,19 @@ FloatingWindow {
                 const symlinkCmd = window.symlinkCommand.arg(originalFile)
                 
                 if (isVideo) {
-                     const finalCmd = window.mpvCommand.arg(originalFile)
-                     Quickshell.execDetached(["bash", "-c", symlinkCmd + "; " + finalCmd])
+                    const finalCmd = window.mpvCommand.arg(originalFile)
+                    Quickshell.execDetached(["bash", "-c", symlinkCmd + "; " + finalCmd])
                 } else {
-                     const randomTransition = window.transitions[Math.floor(Math.random() * window.transitions.length)]
-                     const awwwCmd = window.awwwCommand.arg(originalFile).arg(randomTransition)
-                     const matugenCmd = "matugen image '" + originalFile + "' --mode dark --source-color-index 0"
-                     
-                     // Picker only triggers wallpaper change and Matugen, then exits.
-                     // Simple and fast call to ensure Hyprland catches the window title correctly.
-                     const fullCmd = "pkill mpvpaper; " + symlinkCmd + "; " + awwwCmd + "; " + matugenCmd + " & disown"
-                     Quickshell.execDetached(["bash", "-c", fullCmd]);
+                    const randomTransition = window.transitions[Math.floor(Math.random() * window.transitions.length)]
+                    const awwwCmd = window.awwwCommand.arg(originalFile).arg(randomTransition)
+                    const matugenCmd = "matugen image '" + originalFile + "' --mode dark --source-color-index 0"
+                    
+                    // Wywołujemy nasz kuloodporny skrypt bashowy
+                    const clockCmd = "bash $HOME/.config/quickshell/scripts/update_clock.sh '" + originalFile + "'"
+                    
+                    // Łączymy w całość
+                    const fullCmd = "pkill mpvpaper; " + symlinkCmd + "; " + awwwCmd + "; " + matugenCmd + "; " + clockCmd + " & disown"
+                    Quickshell.execDetached(["bash", "-c", fullCmd]);
                 }
                 
                 quitTimer.start()

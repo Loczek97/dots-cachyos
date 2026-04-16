@@ -53,19 +53,27 @@ fi
 
 CPU=$(top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4 + $6}')
 [ -z "$CPU" ] && CPU=0
-RAM=$(free | grep Mem | awk '{if ($2 > 0) print $3/$2 * 100.0; else print 0}')
+
+RAM_DATA=$(free -m | grep Mem | awk '{print $2 " " $3}')
+RAM_TOTAL=$(echo $RAM_DATA | awk '{print $1}')
+RAM_USED=$(echo $RAM_DATA | awk '{print $2}')
+RAM=$(echo "scale=2; $RAM_USED / $RAM_TOTAL * 100" | bc)
 [ -z "$RAM" ] && RAM=0
 
 # --- NVIDIA GPU ---
 if command -v nvidia-smi &> /dev/null; then
-    GPU_DATA=$(nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu --format=csv,noheader,nounits | tr -d ' ')
+    GPU_DATA=$(nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu,memory.total,memory.used --format=csv,noheader,nounits | tr -d ' ')
     GPU_UTIL=$(echo $GPU_DATA | cut -d',' -f1)
     GPU_MEM_UTIL=$(echo $GPU_DATA | cut -d',' -f2)
     GPU_TEMP=$(echo $GPU_DATA | cut -d',' -f3)
+    GPU_MEM_TOTAL=$(echo $GPU_DATA | cut -d',' -f4)
+    GPU_MEM_USED=$(echo $GPU_DATA | cut -d',' -f5)
 else
     GPU_UTIL=0
     GPU_MEM_UTIL=0
     GPU_TEMP=0
+    GPU_MEM_TOTAL=0
+    GPU_MEM_USED=0
 fi
 
 # --- CPU TEMP ---
@@ -100,4 +108,4 @@ BEGIN { first=1; printf "[" }
 END { printf "]" }
 ')
 
-echo "{\"cpu\": $CPU, \"ram\": $RAM, \"down\": $DOWNLOAD, \"up\": $UPLOAD, \"gpu\": $GPU_UTIL, \"gpu_mem\": $GPU_MEM_UTIL, \"cpu_temp\": $CPU_TEMP, \"gpu_temp\": $GPU_TEMP, \"processes\": $PROCS, \"cpu_cores\": $CORES_JSON}"
+echo "{\"cpu\": $CPU, \"ram\": $RAM, \"ram_total\": $RAM_TOTAL, \"ram_used\": $RAM_USED, \"down\": $DOWNLOAD, \"up\": $UPLOAD, \"gpu\": $GPU_UTIL, \"gpu_mem\": $GPU_MEM_UTIL, \"gpu_mem_total\": $GPU_MEM_TOTAL, \"gpu_mem_used\": $GPU_MEM_USED, \"cpu_temp\": $CPU_TEMP, \"gpu_temp\": $GPU_TEMP, \"processes\": $PROCS, \"cpu_cores\": $CORES_JSON}"
