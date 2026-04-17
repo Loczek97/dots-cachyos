@@ -306,6 +306,7 @@ FloatingWindow {
             if (pendingPassword !== "") {
                 base += " password " + window.shellQuote(pendingPassword);
             }
+
             return ["bash", "-lc", base + " 2>&1"];
         }
         running: false
@@ -326,6 +327,9 @@ FloatingWindow {
                     window.wifiPasswordPopupVisible = false;
                     window.wifiPromptError = "";
                     window.playSfx("power_on.wav");
+
+                    // send notification about successful connection
+                    Quickshell.execDetached(["notify-send", "Połączono z " + wifiConnectProcess.pendingSsid, "--app-name=Menadżer sieci", "--urgency=low"]);
                 } else if (needsSecrets || wrongPassword) {
                     window.wifiPasswordPopupVisible = true;
                     window.wifiPromptError = wrongPassword
