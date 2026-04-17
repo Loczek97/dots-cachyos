@@ -2,10 +2,10 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    property int anchorBottom: 68
-    property int anchorTop: 0
+    property int anchorBottom: 0
+    property int anchorTop: 95
     property int anchorRight: 0
     property int anchorLeft: 96
-    property bool isBottom: true
+    property bool isBottom: false
     property bool isRight: false
 }

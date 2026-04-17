@@ -78,6 +78,7 @@ if [[ -n "$CURRENT_CONN" ]]; then
         echo "FREQ=\"$FREQ\"" >> "$CACHE_FILE"
     fi
 
+
     CONNECTED_JSON=$(jq -n \
                   --arg id "$ssid" \
                   --arg ssid "$ssid" \

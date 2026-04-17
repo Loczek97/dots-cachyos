@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.SystemTray
+import Quickshell.Services.Notifications
 import "."
 
 PanelWindow {
@@ -25,6 +26,64 @@ PanelWindow {
     MatugenTheme {
         id: theme
     }
+
+    // =========================================================
+    // --- NOTIFICATION HANDLING
+    // =========================================================
+    ListModel { id: globalNotificationHistory }
+    ListModel { id: activePopupsModel }
+
+    property int _popupCounter: 0
+
+    function removePopup(uid) {
+        for (let i = 0; i < activePopupsModel.count; i++) {
+            if (activePopupsModel.get(i).uid === uid) {
+                activePopupsModel.remove(i);
+                break;
+            }
+        }
+    }
+
+    NotificationServer {
+        id: globalNotificationServer
+        bodySupported: true
+        actionsSupported: true
+        imageSupported: true
+
+        onNotification: (n) => {
+            let icon = "";
+            if (n.image && n.image.toString() !== "") icon = n.image.toString();
+            else if (n.appIcon && n.appIcon !== "") icon = n.appIcon;
+
+            let notifData = {
+                "appName": n.appName || "System",
+                "summary": n.summary || "No Title",
+                "body": n.body || "",
+                "iconPath": icon,
+                "urgency": n.urgency || 1, 
+                "notif": n
+            };
+
+            globalNotificationHistory.insert(0, notifData);
+
+            barWindow._popupCounter++;
+            let popupData = Object.assign({ "uid": barWindow._popupCounter }, notifData);
+            activePopupsModel.append(popupData);
+        }
+    }    
+
+    NotificationPopups {
+        id: osdPopups
+        popupModel: activePopupsModel
+        uiScale: 1.0 
+    }
+
+    NotificationCenter {
+        id: notifCenter
+        notifModel: globalNotificationHistory
+        isVisible: false
+    }
+    // =========================================================
 
     property bool isStartupReady: false
     Timer { interval: 1; running: true; onTriggered: barWindow.isStartupReady = true }
@@ -237,8 +296,8 @@ PanelWindow {
                     anchors.fill: parent; acceptedButtons: Qt.LeftButton | Qt.RightButton
                     hoverEnabled: true
                     onClicked: (mouse) => {
-                        if (mouse.button === Qt.LeftButton) Quickshell.execDetached(["swaync-client", "-t", "-sw"]);
-                        if (mouse.button === Qt.RightButton) Quickshell.execDetached(["swaync-client", "-d"]);
+                        if (mouse.button === Qt.LeftButton) notifCenter.isVisible = !notifCenter.isVisible;
+                        if (mouse.button === Qt.RightButton) Quickshell.execDetached(["swaync-client", "-d"]); // DND zostawiamy na razie w swaync
                     }
                 }
             }
