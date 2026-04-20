@@ -1,112 +1,100 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland 
+import Quickshell.Io
 import "."
 
 PanelWindow {
     id: desktopClock
-    WlrLayershell.layer: WlrLayer.Background 
+    WlrLayershell.layer: WlrLayer.Bottom 
     color: "transparent"
     
-    // --- KOLOROWANIE MATUGEN ---
     MatugenTheme { id: theme }
 
-    implicitWidth: contentItem.implicitWidth + 40
-    implicitHeight: contentItem.implicitHeight + 40
+    implicitWidth: 400
+    implicitHeight: 500
     
-    anchors {
-        bottom: Config.isBottom
-        top: !Config.isBottom
-        right: Config.isRight
-        left: !Config.isRight
+    anchors.top: true
+    anchors.left: true
+    
+    property int targetX: 100
+    property int targetY: 100
+    
+    margins.left: targetX
+    margins.top: targetY
+
+    Behavior on margins.left { NumberAnimation { duration: 1500; easing.type: Easing.OutQuint } }
+    Behavior on margins.top { NumberAnimation { duration: 1500; easing.type: Easing.OutQuint } }
+
+    Process {
+        id: posReader
+        command: ["cat", Quickshell.env("HOME") + "/.config/quickshell/desktopclock/clock_pos.json"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let d = JSON.parse(this.text);
+                    let tx = d.isRight ? (Screen.width - desktopClock.width - d.anchorRight) : d.anchorLeft;
+                    let ty = d.isBottom ? (Screen.height - desktopClock.height - d.anchorBottom) : d.anchorTop;
+                    
+                    if (Math.abs(desktopClock.targetX - tx) > 1) desktopClock.targetX = tx;
+                    if (Math.abs(desktopClock.targetY - ty) > 1) desktopClock.targetY = ty;
+                } catch(e) {}
+            }
+        }
     }
-    
-    margins.bottom: Config.isBottom ? Config.anchorBottom : 0
-    Behavior on margins.bottom { NumberAnimation { duration: 1200; easing.type: Easing.OutQuint } }
-    
-    margins.top: !Config.isBottom ? Config.anchorTop : 0
-    Behavior on margins.top { NumberAnimation { duration: 1200; easing.type: Easing.OutQuint } }
-    
-    margins.right: Config.isRight ? Config.anchorRight : 0
-    Behavior on margins.right { NumberAnimation { duration: 1200; easing.type: Easing.OutQuint } }
-    
-    margins.left: !Config.isRight ? Config.anchorLeft : 0
-    Behavior on margins.left { NumberAnimation { duration: 1200; easing.type: Easing.OutQuint } }
 
-    Item {
-        id: contentItem
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: posReader.running = true
+    }
+
+    Column {
+        id: mainLayout
         anchors.centerIn: parent
-        implicitWidth: mainLayout.implicitWidth
-        implicitHeight: mainLayout.implicitHeight
-
-        opacity: 0
-        Component.onCompleted: fadeIn.start()
+        spacing: -18 
         
-        NumberAnimation {
-            id: fadeIn
-            target: contentItem
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: 1000
-            easing.type: Easing.OutCubic
+        Text {
+            id: dayNameText
+            font.pixelSize: 50
+            font.family: "Eagle Horizon-Personal use" 
+            font.weight: Font.Normal
+            color: theme.text
+            opacity: 0.8
+            anchors.left: parent.left
         }
 
-        Rectangle {
-            anchors.fill: mainLayout
-            anchors.topMargin: -10
-            anchors.bottomMargin: -20
-            anchors.leftMargin: -25
-            anchors.rightMargin: -25
-            color: theme.crust
-            opacity: 0.4
-            radius: 25
-            border.color: theme.surface0
-            border.width: 1
+        Text {
+            id: dayNumText
+            font.pixelSize: 90
+            font.family: "Eagle Horizon-Personal use"
+            font.weight: Font.Normal
+            color: theme.text
+            anchors.left: parent.left
+            topPadding: -10
         }
 
-        Column {
-            id: mainLayout
-            spacing: -45
+        Text {
+            id: monthNameText
+            font.pixelSize: 32 
+            font.family: "Eagle Horizon-Personal use"
+            font.weight: Font.Normal
+            color: theme.text
+            opacity: 0.6
+            anchors.left: parent.left
+            topPadding: -5
+        }
 
-            Text {
-                id: hoursText
-                text: "00"
-                color: theme.text
-                font.pixelSize: 100
-                font.weight: Font.Black
-                font.letterSpacing: -6
-                anchors.horizontalCenter: parent.horizontalCenter
-                lineHeight: 0.8 
-                topPadding: -15 
-
-                style: Text.Outline
-                styleColor: Qt.rgba(theme.crust.r, theme.crust.g, theme.crust.b, 0.4)
-            }
-
-            Text {
-                id: minutesText
-                text: "00"
-                color: theme.primary
-                font.pixelSize: 100
-                font.weight: Font.Black
-                font.letterSpacing: -6
-                anchors.horizontalCenter: parent.horizontalCenter
-                
-                style: Text.Outline
-                styleColor: Qt.rgba(theme.crust.r, theme.crust.g, theme.crust.b, 0.4)
-            }
-
-            Text {
-                id: dateText
-                text: ""
-                color: theme.subtext1
-                font.pixelSize: 15
-                font.weight: Font.Bold
-                font.capitalization: Font.Lowercase
-                anchors.horizontalCenter: parent.horizontalCenter
-                topPadding: 30
-            }
+        Text {
+            id: timeText
+            font.pixelSize: 90
+            font.family: "Eagle Horizon-Personal use"
+            font.weight: Font.Normal
+            color: theme.peach 
+            anchors.left: parent.left
+            topPadding: -10
         }
     }
 
@@ -117,9 +105,10 @@ PanelWindow {
         triggeredOnStart: true
         onTriggered: {
             const now = new Date();
-            hoursText.text = now.toLocaleTimeString(Qt.locale(), "HH")
-            minutesText.text = now.toLocaleTimeString(Qt.locale(), "mm")
-            dateText.text = now.toLocaleDateString(Qt.locale(), "dddd, d MMMM");
+            dayNameText.text = now.toLocaleDateString(Qt.locale(), "ddd").toLowerCase().replace(".", "");
+            dayNumText.text = now.getDate();
+            monthNameText.text = now.toLocaleDateString(Qt.locale(), "MMMM").toLowerCase();
+            timeText.text = now.toLocaleTimeString(Qt.locale(), "HH:mm");
         }
     }
 }

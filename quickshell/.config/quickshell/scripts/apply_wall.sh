@@ -23,12 +23,11 @@ if [[ "$MIME_TYPE" == video/* ]]; then
     ffmpeg -y -i "$WALLPAPER_PATH" -frames:v 1 -update 1 "$TEMP_FRAME" > /dev/null 2>&1
     matugen image "$TEMP_FRAME" --mode dark --source-color-index 0
     
-    # Używamy klatki jako ikony powiadomienia
     ICON_PATH="$TEMP_FRAME"
     
-    # Czyścimy swww i odpalamy mpvpaper
     swww clear
-    mpvpaper -o 'loop --hwdec=auto --no-audio' '*' "$WALLPAPER_PATH" & disown
+    # Optymalizacja bezpieczna dla mpvpaper (bez zmiany vo i gpu-context)
+    mpvpaper -o 'loop --hwdec=auto --no-audio --cache=no --demuxer-max-bytes=10M --vd-lavc-threads=1 --profile=fast --vd-lavc-fast --swapchain-depth=1' '*' "$WALLPAPER_PATH" & disown
 else
     # Obsługa obrazów
     swww query || swww-daemon &
