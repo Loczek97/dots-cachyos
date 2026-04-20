@@ -6,6 +6,14 @@ sync
 hyprctl reload
 sleep 0.1
 
+# Refresh colors for GTK/Quickshell/Kitty
+bash "$HOME/.config/quickshell/wallpapers-szablon-imperative-dots/matugen_reload.sh"
+
+# GTK & Libadwaita (Nautilus)
+gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+gsettings set org.gnome.desktop.interface gtk-theme "Adwaita"
+gsettings set org.gnome.desktop.interface icon-theme "Adwaita"
+
 # Kitty
 killall -SIGUSR1 kitty 2>/dev/null
 
