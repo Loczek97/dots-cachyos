@@ -1,6 +1,6 @@
 [config]
 set_wallpaper = false
-type = "scheme-expressive"
+type = "scheme-content"
 contrast = 0
 
 [templates.colors]
