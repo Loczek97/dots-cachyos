@@ -58,6 +58,7 @@ PanelWindow {
         
         Text {
             id: dayNameText
+            leftPadding: 25
             font.pixelSize: 50
             font.family: "Eagle Horizon-Personal use" 
             font.weight: Font.Normal
@@ -68,6 +69,7 @@ PanelWindow {
 
         Text {
             id: dayNumText
+            leftPadding: 25
             font.pixelSize: 90
             font.family: "Eagle Horizon-Personal use"
             font.weight: Font.Normal
@@ -78,6 +80,7 @@ PanelWindow {
 
         Text {
             id: monthNameText
+            leftPadding: 25
             font.pixelSize: 32 
             font.family: "Eagle Horizon-Personal use"
             font.weight: Font.Normal
@@ -89,6 +92,7 @@ PanelWindow {
 
         Text {
             id: timeText
+            leftPadding: 25
             font.pixelSize: 90
             font.family: "Eagle Horizon-Personal use"
             font.weight: Font.Normal
