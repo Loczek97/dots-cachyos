@@ -6,7 +6,8 @@ import "."
 
 PanelWindow {
     id: desktopClock
-    WlrLayershell.layer: WlrLayer.Bottom 
+    WlrLayershell.layer: WlrLayer.Background
+    WlrLayershell.namespace: "desktopclock"
     color: "transparent"
     
     MatugenTheme { id: theme }
@@ -14,6 +15,7 @@ PanelWindow {
     implicitWidth: 400
     implicitHeight: 500
     
+    // In Quickshell PanelWindow, these are direct properties, not an 'anchors' object
     anchors.top: true
     anchors.left: true
     
@@ -23,8 +25,9 @@ PanelWindow {
     margins.left: targetX
     margins.top: targetY
 
-    Behavior on margins.left { NumberAnimation { duration: 1500; easing.type: Easing.OutQuint } }
-    Behavior on margins.top { NumberAnimation { duration: 1500; easing.type: Easing.OutQuint } }
+    // Behavior on margins is problematic in Quickshell, so we will use 
+    // a separate property for animated positioning if needed later.
+    // For now, let's just get it visible.
 
     Process {
         id: posReader

@@ -130,9 +130,12 @@ handle_network_prep() {
 }
 
 # -----------------------------------------------------------------------------
-# WATCHDOG: Ensure TopBar is alive
+# WATCHDOG: Ensure TopBar and DesktopClock are alive
 # -----------------------------------------------------------------------------
 TOPBAR_QML="$QS_CONFIG/bar/TopBar.qml"
+CLOCK_QML="$QS_CONFIG/desktopclock/DesktopClock.qml"
+
+# Check and start TopBar
 BAR_PID=$(pgrep -u $USER -x quickshell | while read pid; do if ps -fp "$pid" | grep -q "bar/TopBar\.qml"; then
   echo "$pid"
   break
@@ -145,11 +148,28 @@ if [[ -z "$BAR_PID" ]] && [[ -f "$TOPBAR_QML" ]] && [[ "$ACTION" != "restart" ]]
   sleep 0.3
 fi
 
+# Check and start DesktopClock
+CLOCK_PID=$(pgrep -u $USER -x quickshell | while read pid; do if ps -fp "$pid" | grep -q "desktopclock/DesktopClock\.qml"; then
+  echo "$pid"
+  break
+fi; done)
+
+if [[ -z "$CLOCK_PID" ]] && [[ -f "$CLOCK_QML" ]] && [[ "$ACTION" != "restart" ]] && [[ "$ACTION" != "close" ]]; then
+  echo "Starting DesktopClock because CLOCK_PID is empty" >>"$LOG_FILE"
+  quickshell -p "$CLOCK_QML" >>"$LOG_FILE" 2>&1 &
+  disown
+  sleep 0.1
+fi
+
 if [[ "$ACTION" == "restart" ]]; then
   pkill -u $USER -x quickshell 2>/dev/null
   sleep 0.5
   if [[ -f "$TOPBAR_QML" ]]; then
     QS_NO_RELOAD_POPUP=1 quickshell -p "$TOPBAR_QML" >>"$LOG_FILE" 2>&1 &
+    disown
+  fi
+  if [[ -f "$CLOCK_QML" ]]; then
+    quickshell -p "$CLOCK_QML" >>"$LOG_FILE" 2>&1 &
     disown
   fi
   exit 0
