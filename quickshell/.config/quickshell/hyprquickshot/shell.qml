@@ -15,6 +15,8 @@ FreezeScreen {
 
     property var activeScreen: null
 
+    MatugenTheme { id: theme }
+
     Settings {
         id: settings
         category: "Hyprquickshot"
@@ -47,7 +49,6 @@ FreezeScreen {
 
     property var hyprlandMonitor: Hyprland.focusedMonitor
     property string tempPath
-
     property string mode: "region"
 
     Shortcut {
@@ -113,7 +114,7 @@ FreezeScreen {
         anchors.fill: parent
  
         dimOpacity: 0.6
-        borderRadius: 10.0
+        borderRadius: 20.0
         outlineThickness: 2.0
  
         onRegionSelected: (x, y, width, height) => {
@@ -128,7 +129,7 @@ FreezeScreen {
  
         monitor: root.hyprlandMonitor
         dimOpacity: 0.6
-        borderRadius: 10.0
+        borderRadius: 20.0
         outlineThickness: 2.0
  
         onRegionSelected: (x, y, width, height) => {
@@ -141,17 +142,17 @@ FreezeScreen {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 40
 
-        color: Qt.rgba(0.1, 0.1, 0.1, 0.8)
-        radius: 12
-        margin: 8
+        color: Qt.rgba(theme.surface0.r, theme.surface0.g, theme.surface0.b, 0.85)
+        radius: 24
+        margin: 12
 
 		Row {
 			id: settingRow
 			spacing: 25
-		
+
 			Row {
 				id: buttonRow
-				spacing: 8
+				spacing: 12
 	 
 				Repeater {
 					model: [
@@ -162,19 +163,19 @@ FreezeScreen {
 	 
 					Button {
 						id: modeButton
-						implicitWidth: 48
-						implicitHeight: 48
+						implicitWidth: 54
+						implicitHeight: 54
 
 						background: Rectangle {
-							radius: 8
+							radius: 16
 							color: {
-								if(mode === modelData.mode) return Qt.rgba(0.3, 0.4, 0.7, 0.5)
-								if (modeButton.hovered) return Qt.rgba(0.4, 0.4, 0.4, 0.5)
+								if(mode === modelData.mode) return theme.mauve
+								if (modeButton.hovered) return theme.surface2
 
-								return Qt.rgba(0.3, 0.3, 0.35, 0.5)
+								return theme.surface1
 							}
 
-							Behavior on color { ColorAnimation { duration: 100 } }
+							Behavior on color { ColorAnimation { duration: 150 } }
 						}
 
 						contentItem: Item {
@@ -186,6 +187,7 @@ FreezeScreen {
 								height: 24
 								source: Quickshell.shellPath(`icons/${modelData.icon}.svg`)
 								fillMode: Image.PreserveAspectFit
+                                // Optional: Można by tu dodać ColorOverlay dla ikon, jeśli są czarne
 							}
 						}
 
@@ -201,13 +203,14 @@ FreezeScreen {
 			
 			Row {
 				id: switchRow
-				spacing: 8
+				spacing: 12
 				anchors.verticalCenter: buttonRow.verticalCenter
 
 				Text {
-					text: "Save to disk"
-					color: "#ffffff"
+					text: "Zapisz jako plik"
+					color: theme.text
 					font.pixelSize: 14
+                    font.family: "CaskaydiaCove Nerd Font"
 					verticalAlignment: Text.AlignVCenter
 					anchors.verticalCenter: parent.verticalCenter
 				}
