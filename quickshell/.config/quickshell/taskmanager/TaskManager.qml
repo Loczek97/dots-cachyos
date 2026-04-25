@@ -74,14 +74,14 @@ ShellRoot {
         return path.replace(/^(file:\/{2,3})/, "/");
     }
 
-    function formatSpeed(bits) {
-        let bps = parseFloat(bits);
-        if (bps < 1024) return bps.toFixed(0) + " b/s";
-        let kbps = bps / 1024;
-        if (kbps < 1024) return kbps.toFixed(1) + " Kb/s";
-        let mbps = kbps / 1024;
-        if (mbps < 1024) return mbps.toFixed(1) + " Mb/s";
-        return (mbps / 1024).toFixed(2) + " Gb/s";
+    function formatSpeed(bytes) {
+        let b = parseFloat(bytes);
+        if (b < 1024) return b.toFixed(0) + " B/s";
+        let kb = b / 1024;
+        if (kb < 1024) return kb.toFixed(1) + " KB/s";
+        let mb = kb / 1024;
+        if (mb < 1024) return mb.toFixed(1) + " MB/s";
+        return (mb / 1024).toFixed(2) + " GB/s";
     }
 
     function formatMem(mb) {

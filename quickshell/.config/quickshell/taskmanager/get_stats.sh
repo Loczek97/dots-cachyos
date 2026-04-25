@@ -15,8 +15,8 @@ TX_NOW=$(echo $READ_NET | awk '{print $2}')
 if [ -f "$NET_STATE" ]; then
     read LAST_TIME LAST_RX LAST_TX < "$NET_STATE"
     TIME_DIFF=$(echo "$NOW - $LAST_TIME" | bc)
-    DOWNLOAD=$(echo "($RX_NOW - $LAST_RX) * 8 / $TIME_DIFF" | bc)
-    UPLOAD=$(echo "($TX_NOW - $LAST_TX) * 8 / $TIME_DIFF" | bc)
+    DOWNLOAD=$(echo "($RX_NOW - $LAST_RX) / $TIME_DIFF" | bc)
+    UPLOAD=$(echo "($TX_NOW - $LAST_TX) / $TIME_DIFF" | bc)
 else
     DOWNLOAD=0
     UPLOAD=0
@@ -54,9 +54,10 @@ fi
 CPU=$(top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4 + $6}')
 [ -z "$CPU" ] && CPU=0
 
-RAM_DATA=$(free -m | grep Mem | awk '{print $2 " " $3}')
+RAM_DATA=$(free -m | grep Mem | awk '{print $2 " " $7}')
 RAM_TOTAL=$(echo $RAM_DATA | awk '{print $1}')
-RAM_USED=$(echo $RAM_DATA | awk '{print $2}')
+RAM_AVAIL=$(echo $RAM_DATA | awk '{print $2}')
+RAM_USED=$((RAM_TOTAL - RAM_AVAIL))
 RAM=$(echo "scale=2; $RAM_USED / $RAM_TOTAL * 100" | bc)
 [ -z "$RAM" ] && RAM=0
 
@@ -64,10 +65,15 @@ RAM=$(echo "scale=2; $RAM_USED / $RAM_TOTAL * 100" | bc)
 if command -v nvidia-smi &> /dev/null; then
     GPU_DATA=$(nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu,memory.total,memory.used --format=csv,noheader,nounits | tr -d ' ')
     GPU_UTIL=$(echo $GPU_DATA | cut -d',' -f1)
-    GPU_MEM_UTIL=$(echo $GPU_DATA | cut -d',' -f2)
     GPU_TEMP=$(echo $GPU_DATA | cut -d',' -f3)
     GPU_MEM_TOTAL=$(echo $GPU_DATA | cut -d',' -f4)
     GPU_MEM_USED=$(echo $GPU_DATA | cut -d',' -f5)
+    # Calculate actual memory usage percentage instead of controller utilization
+    if [ "$GPU_MEM_TOTAL" -gt 0 ]; then
+        GPU_MEM_UTIL=$(echo "scale=2; $GPU_MEM_USED / $GPU_MEM_TOTAL * 100" | bc)
+    else
+        GPU_MEM_UTIL=0
+    fi
 else
     GPU_UTIL=0
     GPU_MEM_UTIL=0
