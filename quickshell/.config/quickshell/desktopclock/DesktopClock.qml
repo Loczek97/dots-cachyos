@@ -6,7 +6,7 @@ import "."
 
 PanelWindow {
     id: desktopClock
-    WlrLayershell.layer: WlrLayer.Background
+    WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.namespace: "desktopclock"
     color: "transparent"
     

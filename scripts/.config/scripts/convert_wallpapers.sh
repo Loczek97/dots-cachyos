@@ -19,16 +19,16 @@ for f in "${files[@]}"; do
   extension="${filename##*.}"
   lower_ext="${extension,,}"
 
-  if [[ "$lower_ext" == "jpg" || "$lower_ext" == "jpeg" ]]; then
+  if [[ "$lower_ext" == "jpg" || "$lower_ext" == "jpeg" || "$lower_ext" == "gif" ]]; then
     continue
   fi
 
   mime=$(file --mime-type -b "$f")
 
-  if [[ "$mime" == image/* ]]; then
+  if [[ "$mime" == image/* && "$mime" != "image/gif" ]]; then
     new_name="${filename%.*}.jpg"
 
-    if magick "$f" "$new_name"; then
+    if magick "${f}[0]" "$new_name"; then
       rm "$f"
     else
       echo "  [ERROR] Failed to convert: $filename"
