@@ -7,7 +7,8 @@ SRC_DIR="$HOME/.config/backgrounds"
 mkdir -p "$THUMB_DIR"
 mkdir -p "$MARKER_DIR"
 
-./convert_wallpapers.sh "$SRC_DIR"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/convert_wallpapers.sh" "$SRC_DIR"
 
 shopt -s nullglob
 for img in "$SRC_DIR"/*.{jpg,jpeg,png,webp,gif}; do
