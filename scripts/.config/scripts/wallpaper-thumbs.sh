@@ -7,32 +7,26 @@ SRC_DIR="$HOME/.config/backgrounds"
 mkdir -p "$THUMB_DIR"
 mkdir -p "$MARKER_DIR"
 
-# 0. Convert images to jpg/png using external script
-./convert_wallpapers.sh $SRC_DIR
+./convert_wallpapers.sh "$SRC_DIR"
 
-# 1. Process Images
+shopt -s nullglob
 for img in "$SRC_DIR"/*.{jpg,jpeg,png,webp,gif}; do
   [ -e "$img" ] || continue
   filename=$(basename "$img")
   thumb="$THUMB_DIR/$filename"
   marker_prefix="$MARKER_DIR/$filename"
 
-  # Generate thumbnail
   if [ ! -f "$thumb" ]; then
-    magick "$img" -resize x420 -quality 70 "$thumb"
+    magick "${img}[0]" -resize x420 -quality 70 "jpg:$thumb"
   fi
 
-  # Generate color marker if missing
   if [[ -z $(ls "${marker_prefix}_HEX_"* 2>/dev/null) ]]; then
-    # Use %[pixel:p{0,0}] to get hex color safely in Magick v7
-    hex=$(magick "$thumb" -scale 1x1\! -alpha off -format "%[pixel:p{0,0}]" info:)
-    # Remove '#' and take only 6 chars
+    hex=$(magick "${img}[0]" -scale 1x1\! -alpha off -format "%[pixel:p{0,0}]" info:)
     hex_short=$(echo "$hex" | sed 's/#//' | head -c 6)
     touch "${marker_prefix}_HEX_${hex_short}"
   fi
 done
 
-# 2. Process Videos
 for vid in "$SRC_DIR"/*.{mp4,mkv,mov,webm}; do
   [ -e "$vid" ] || continue
   filename=$(basename "$vid")
