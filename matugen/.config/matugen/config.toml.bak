@@ -23,7 +23,7 @@ output_path = "~/.config/rofi/shared/colors.rasi"
 post_hook = "pkill rofi"
 
 [templates.quickshell_qml]
-input_path = "~/.config/matugen/templates/MatugenTheme.qml"
+input_path = "~/.config/matugen/templates/MatugenTheme.qml.template"
 output_path = "~/.config/quickshell/MatugenTheme.qml"
 
 [templates.swaync]

@@ -1,66 +1,100 @@
 import QtQuick
-import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Io 
 
 PanelWindow {
     id: centerWindow
 
     property var notifModel
     property bool isVisible: false
-
-    // Szerokość panelu
     property int panelWidth: 400
+    property QtObject _theme: themeLoader.item ? themeLoader.item : dummyTheme
 
     WlrLayershell.namespace: "qs-notification-center"
     WlrLayershell.layer: WlrLayer.Overlay
-    
     exclusiveZone: 0
     exclusionMode: ExclusionMode.Ignore
-    
-    // Zmienione na LEWĄ stronę
+    width: panelWidth + 20
+    color: "transparent"
+    visible: mainContainer.x + mainContainer.width > 0
+
     anchors {
         top: true
         bottom: true
         left: true
     }
-    
-    width: panelWidth + 20
-    color: "transparent"
 
-    // Ukrywamy okno, gdy kontener jest poza lewą krawędzią
-    visible: mainContainer.x + mainContainer.width > 0
-    
-    MatugenTheme { id: _theme }
+    Loader {
+        id: themeLoader
+
+        source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+    }
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+        watchChanges: true
+        onFileChanged: {
+            themeLoader.source = "";
+            themeLoader.source = "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml?reload=" + Date.now();
+        }
+    }
+
+    QtObject {
+        id: dummyTheme
+
+        property color base: "#000000"
+        property color mantle: "#000000"
+        property color crust: "#000000"
+        property color surface0: "#000000"
+        property color surface1: "#000000"
+        property color surface2: "#000000"
+        property color overlay0: "#000000"
+        property color overlay1: "#000000"
+        property color overlay2: "#000000"
+        property color text: "#000000"
+        property color subtext1: "#000000"
+        property color subtext0: "#000000"
+        property color primary: "#000000"
+        property color secondary: "#000000"
+        property color tertiary: "#000000"
+        property color mauve: "#000000"
+        property color pink: "#000000"
+        property color blue: "#000000"
+        property color sapphire: "#000000"
+        property color peach: "#000000"
+        property color yellow: "#000000"
+        property color teal: "#000000"
+        property color green: "#000000"
+        property color red: "#000000"
+        property color maroon: "#000000"
+    }
 
     Rectangle {
         id: mainContainer
+
         width: panelWidth
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.margins: 10
-        anchors.leftMargin: 10 // Margines od lewej krawędzi
+        anchors.leftMargin: 10
         radius: 20
         color: _theme.base
         border.color: _theme.surface1
         border.width: 1
-
-        // Logika wysuwania z LEWEJ strony
-        x: isVisible ? 10 : -panelWidth - 20 
-        Behavior on x { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+        x: isVisible ? 10 : -panelWidth - 20
 
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
             spacing: 15
 
-            // NAGŁÓWEK
             RowLayout {
                 Layout.fillWidth: true
-                
+
                 Text {
                     text: "Powiadomienia"
                     font.family: "JetBrains Mono"
@@ -87,22 +121,25 @@ PanelWindow {
 
                     MouseArea {
                         id: clearMouse
+
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: centerWindow.notifModel.clear()
                     }
+
                 }
+
             }
 
-            // LISTA POWIADOMIEŃ
             ListView {
                 id: notifList
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 model: centerWindow.notifModel
                 spacing: 10
                 clip: true
-                
+
                 Text {
                     anchors.centerIn: parent
                     text: "Brak nowych powiadomień"
@@ -113,13 +150,14 @@ PanelWindow {
                 }
 
                 delegate: Item {
+                    property bool isCritical: model.urgency === 2
+
                     width: notifList.width
                     height: delegateCard.height
 
-                    property bool isCritical: model.urgency === 2
-
                     Rectangle {
                         id: delegateCard
+
                         width: parent.width
                         height: innerRow.height + 24
                         radius: 12
@@ -129,6 +167,7 @@ PanelWindow {
 
                         RowLayout {
                             id: innerRow
+
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.top: parent.top
@@ -140,24 +179,29 @@ PanelWindow {
                                 Layout.preferredHeight: 32
                                 radius: 8
                                 color: _theme.base
-                                
+
                                 Image {
                                     anchors.fill: parent
                                     anchors.margins: 4
                                     source: {
                                         let p = model.iconPath || "";
-                                        if (p === "") return "";
-                                        if (p.startsWith("image://") || p.startsWith("file://") || p.startsWith("/")) return p;
+                                        if (p === "")
+                                            return "";
+
+                                        if (p.startsWith("image://") || p.startsWith("file://") || p.startsWith("/"))
+                                            return p;
+
                                         return "image://icon/" + p;
                                     }
                                     fillMode: Image.PreserveAspectFit
                                 }
+
                             }
 
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 0
-                                
+
                                 Text {
                                     text: model.summary || ""
                                     font.family: "JetBrains Mono"
@@ -167,7 +211,7 @@ PanelWindow {
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
-                                
+
                                 Text {
                                     text: model.body || ""
                                     font.family: "JetBrains Mono"
@@ -178,6 +222,7 @@ PanelWindow {
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
+
                             }
 
                             MouseArea {
@@ -185,7 +230,7 @@ PanelWindow {
                                 Layout.preferredHeight: 20
                                 hoverEnabled: true
                                 onClicked: centerWindow.notifModel.remove(index)
-                                
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰅖"
@@ -193,22 +238,38 @@ PanelWindow {
                                     font.pixelSize: 14
                                     color: parent.containsMouse ? _theme.red : _theme.overlay1
                                 }
+
                             }
+
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             anchors.rightMargin: 30
                             onClicked: {
-                                if (model.notif && typeof model.notif.invokeAction === "function") {
-                                    model.notif.invokeAction("default")
-                                }
-                                centerWindow.notifModel.remove(index)
+                                if (model.notif && typeof model.notif.invokeAction === "function")
+                                    model.notif.invokeAction("default");
+
+                                centerWindow.notifModel.remove(index);
                             }
                         }
+
                     }
+
                 }
+
             }
+
         }
+
+        Behavior on x {
+            NumberAnimation {
+                duration: 400
+                easing.type: Easing.OutQuint
+            }
+
+        }
+
     }
+
 }

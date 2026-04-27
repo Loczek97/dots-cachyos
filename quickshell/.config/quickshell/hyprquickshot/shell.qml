@@ -15,7 +15,30 @@ FreezeScreen {
 
     property var activeScreen: null
 
-    MatugenTheme { id: theme }
+    Loader {
+        id: themeLoader
+        source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+    }
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+        watchChanges: true
+        onFileChanged: {
+            themeLoader.source = "";
+            themeLoader.source = "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml?reload=" + Date.now();
+        }
+    }
+
+    QtObject {
+        id: dummyTheme
+        property color surface0: "#000000"
+        property color surface1: "#000000"
+        property color surface2: "#000000"
+        property color text: "#000000"
+        property color mauve: "#000000"
+    }
+
+    property QtObject theme: themeLoader.item ? themeLoader.item : dummyTheme
 
     Settings {
         id: settings

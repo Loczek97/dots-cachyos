@@ -1,46 +1,72 @@
+import "."
 import QtQuick
 import Quickshell
-import Quickshell.Wayland 
 import Quickshell.Io
-import "."
+import Quickshell.Wayland
 
 PanelWindow {
     id: desktopClock
+
+    property QtObject theme: themeLoader.item ? themeLoader.item : dummyTheme
+    property int targetX: 100
+    property int targetY: 100
+    readonly property string posFilePath: Quickshell.env("HOME") + "/.config/quickshell/desktopclock/clock_pos.json"
+
     WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.namespace: "desktopclock"
     color: "transparent"
-    
-    MatugenTheme { id: theme }
-
     implicitWidth: 450
     implicitHeight: 500
-    
     anchors.top: true
     anchors.left: true
-    
-    property int targetX: 100
-    property int targetY: 100
-    
     margins.left: targetX
     margins.top: targetY
+    Component.onCompleted: posReader.running = true
 
-    readonly property string posFilePath: Quickshell.env("HOME") + "/.config/quickshell/desktopclock/clock_pos.json"
+    Loader {
+        id: themeLoader
+
+        source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+    }
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+        watchChanges: true
+        onFileChanged: {
+            themeLoader.source = "";
+            themeLoader.source = "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml?reload=" + Date.now();
+        }
+    }
+
+    QtObject {
+        id: dummyTheme
+
+        property color text: "#000000"
+        property color peach: "#000000"
+    }
 
     Process {
         id: posReader
+
         command: ["cat", desktopClock.posFilePath]
+
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
                     let d = JSON.parse(this.text);
                     let tx = d.isRight ? (Screen.width - desktopClock.width - d.anchorRight) : d.anchorLeft;
                     let ty = d.isBottom ? (Screen.height - desktopClock.height - d.anchorBottom) : d.anchorTop;
-                    
-                    if (Math.abs(desktopClock.targetX - tx) > 1) desktopClock.targetX = tx;
-                    if (Math.abs(desktopClock.targetY - ty) > 1) desktopClock.targetY = ty;
-                } catch(e) {}
+                    if (Math.abs(desktopClock.targetX - tx) > 1)
+                        desktopClock.targetX = tx;
+
+                    if (Math.abs(desktopClock.targetY - ty) > 1)
+                        desktopClock.targetY = ty;
+
+                } catch (e) {
+                }
             }
         }
+
     }
 
     FileView {
@@ -49,18 +75,18 @@ PanelWindow {
         onFileChanged: posReader.running = true
     }
 
-    Component.onCompleted: posReader.running = true
-
     Column {
         id: mainLayout
+
         anchors.centerIn: parent
-        spacing: -18 
-        
+        spacing: -18
+
         Text {
             id: dayNameText
+
             leftPadding: 25
             font.pixelSize: 50
-            font.family: "Eagle Horizon-Personal use" 
+            font.family: "Eagle Horizon-Personal use"
             font.weight: Font.Normal
             color: theme.text
             opacity: 0.8
@@ -69,6 +95,7 @@ PanelWindow {
 
         Text {
             id: dayNumText
+
             leftPadding: 25
             font.pixelSize: 90
             font.family: "Eagle Horizon-Personal use"
@@ -80,8 +107,9 @@ PanelWindow {
 
         Text {
             id: monthNameText
+
             leftPadding: 25
-            font.pixelSize: 32 
+            font.pixelSize: 32
             font.family: "Eagle Horizon-Personal use"
             font.weight: Font.Normal
             color: theme.text
@@ -92,14 +120,16 @@ PanelWindow {
 
         Text {
             id: timeText
+
             leftPadding: 25
             font.pixelSize: 90
             font.family: "Eagle Horizon-Personal use"
             font.weight: Font.Normal
-            color: theme.peach 
+            color: theme.peach
             anchors.left: parent.left
             topPadding: -10
         }
+
     }
 
     Timer {
@@ -115,4 +145,5 @@ PanelWindow {
             timeText.text = now.toLocaleTimeString(Qt.locale(), "HH:mm");
         }
     }
+
 }

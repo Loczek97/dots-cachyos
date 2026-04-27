@@ -9,7 +9,47 @@ import "."
 ShellRoot {
     id: root
 
-    MatugenTheme { id: theme }
+    Loader {
+        id: themeLoader
+        source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+    }
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+        watchChanges: true
+        onFileChanged: {
+            themeLoader.source = "";
+            themeLoader.source = "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml?reload=" + Date.now();
+        }
+    }
+
+    QtObject {
+        id: dummyTheme
+        property color base: "#000000"
+        property color mantle: "#000000"
+        property color crust: "#000000"
+        property color surface0: "#000000"
+        property color surface1: "#000000"
+        property color surface2: "#000000"
+        property color overlay0: "#000000"
+        property color overlay1: "#000000"
+        property color overlay2: "#000000"
+        property color text: "#000000"
+        property color subtext1: "#000000"
+        property color subtext0: "#000000"
+        property color mauve: "#000000"
+        property color pink: "#000000"
+        property color blue: "#000000"
+        property color sapphire: "#000000"
+        property color peach: "#000000"
+        property color yellow: "#000000"
+        property color teal: "#000000"
+        property color green: "#000000"
+        property color red: "#000000"
+        property color maroon: "#000000"
+    }
+
+    property QtObject theme: themeLoader.item ? themeLoader.item : dummyTheme
 
     // --- COLOR MAPPINGS ---
     readonly property color base: theme.base

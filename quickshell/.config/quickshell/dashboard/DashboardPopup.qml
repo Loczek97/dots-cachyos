@@ -1,22 +1,15 @@
+import "."
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
 import QtQuick.Effects
+import QtQuick.Layouts 1.15
 import Quickshell
 import Quickshell.Io
-import "."
 
 FloatingWindow {
     id: powermenuWindow
-    title: "dashboard_win"
-    
-    width: screen.width                                                      
-    height: screen.height 
-    
-    color: "transparent"
 
-    MatugenTheme { id: theme }
-
+    property QtObject theme: themeLoader.item ? themeLoader.item : dummyTheme
     // -------------------------------------------------------------------------
     // COLOR MAPPINGS
     // -------------------------------------------------------------------------
@@ -29,7 +22,6 @@ FloatingWindow {
     readonly property color surface2: theme.surface2
     readonly property color surface1: theme.surface1
     readonly property color surface0: theme.surface0
-    
     readonly property color mauve: theme.mauve
     readonly property color blue: theme.blue
     readonly property color sapphire: theme.sapphire
@@ -38,10 +30,82 @@ FloatingWindow {
     readonly property color teal: theme.teal
     readonly property color green: theme.green
     readonly property color red: theme.red
+    // -------------------------------------------------------------------------
+    // LOGIC
+    // -------------------------------------------------------------------------
+    property string realName: "Użytkownik"
+    property string hostName: "linux"
+    property string facePath: "file://" + Quickshell.env("HOME") + "/.face"
+    property var musicData: {
+        "title": "Nie odtwarza",
+        "artist": "Nie odtwarza",
+        "status": "Zatrzymany",
+        "percent": 0,
+        "lengthStr": "00:00",
+        "positionStr": "00:00",
+        "artUrl": ""
+    }
+    property var weatherData: null
+    property string upHours: "0"
+    property string upMins: "0"
+
+    function execCmd(cmdStr) {
+        Quickshell.execDetached(["bash", "-c", cmdStr]);
+    }
+
+    title: "dashboard_win"
+    width: screen.width
+    height: screen.height
+    color: "transparent"
+
+    Loader {
+        id: themeLoader
+
+        source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+    }
+
+    FileView {
+        path: Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
+        watchChanges: true
+        onFileChanged: {
+            themeLoader.source = "";
+            themeLoader.source = "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml?reload=" + Date.now();
+        }
+    }
+
+    QtObject {
+        id: dummyTheme
+
+        property color base: "#000000"
+        property color mantle: "#000000"
+        property color crust: "#000000"
+        property color surface0: "#000000"
+        property color surface1: "#000000"
+        property color surface2: "#000000"
+        property color overlay0: "#000000"
+        property color overlay1: "#000000"
+        property color overlay2: "#000000"
+        property color text: "#000000"
+        property color subtext1: "#000000"
+        property color subtext0: "#000000"
+        property color mauve: "#000000"
+        property color pink: "#000000"
+        property color blue: "#000000"
+        property color sapphire: "#000000"
+        property color peach: "#000000"
+        property color yellow: "#000000"
+        property color teal: "#000000"
+        property color green: "#000000"
+        property color red: "#000000"
+        property color maroon: "#000000"
+    }
 
     // Close on click outside or Escape
-    Shortcut { sequence: "Escape"; onActivated: Qt.quit() }
-    
+    Shortcut {
+        sequence: "Escape"
+        onActivated: Qt.quit()
+    }
+
     MouseArea {
         anchors.fill: parent
         onClicked: Qt.quit()
@@ -53,121 +117,126 @@ FloatingWindow {
         color: "#d0000000" // Dark semi-transparent background
     }
 
-    // -------------------------------------------------------------------------
-    // LOGIC
-    // -------------------------------------------------------------------------
-    property string realName: "Użytkownik"
-    property string hostName: "linux"
-    property string facePath: "file://" + Quickshell.env("HOME") + "/.face"
-
     Process {
         id: userPoller
+
         command: ["sh", "-c", "getent passwd $USER | cut -d: -f5 | cut -d, -f1"]
         running: true
-        stdout: StdioCollector { 
-            onStreamFinished: { 
-                let name = this.text.trim()
-                if (name !== "") powermenuWindow.realName = name
-            } 
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let name = this.text.trim();
+                if (name !== "")
+                    powermenuWindow.realName = name;
+
+            }
         }
+
     }
 
     Process {
         id: hostPoller
+
         command: ["hostname"]
         running: true
-        stdout: StdioCollector { 
-            onStreamFinished: { 
-                let host = this.text.trim()
-                if (host !== "") powermenuWindow.hostName = host
-            } 
-        }
-    }
 
-    property var musicData: { 
-        "title": "Nie odtwarza", 
-        "artist": "Nie odtwarza", 
-        "status": "Zatrzymany", 
-        "percent": 0, 
-        "lengthStr": "00:00", 
-        "positionStr": "00:00", 
-        "artUrl": "" 
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let host = this.text.trim();
+                if (host !== "")
+                    powermenuWindow.hostName = host;
+
+            }
+        }
+
     }
 
     Process {
         id: musicPoller
+
         command: ["bash", Quickshell.env("HOME") + "/.config/quickshell/music/music_info.sh"]
         running: true
-        stdout: StdioCollector { 
-            onStreamFinished: { 
-                let txt = this.text.trim()
-                if (txt !== "") { 
-                    try { powermenuWindow.musicData = JSON.parse(txt) } catch(e) {} 
-                } 
-            } 
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let txt = this.text.trim();
+                if (txt !== "") {
+                    try {
+                        powermenuWindow.musicData = JSON.parse(txt);
+                    } catch (e) {
+                    }
+                }
+            }
         }
+
     }
-    Timer { 
+
+    Timer {
         interval: 1000
         running: true
         repeat: true
-        onTriggered: musicPoller.running = true 
+        onTriggered: musicPoller.running = true
     }
 
-    property var weatherData: null
     Process {
         id: weatherPoller
+
         command: ["bash", Quickshell.env("HOME") + "/.config/quickshell/calendar/weather.sh", "--json"]
         running: true
-        stdout: StdioCollector { 
-            onStreamFinished: { 
-                let txt = this.text.trim()
-                if (txt !== "") { 
-                    try { powermenuWindow.weatherData = JSON.parse(txt) } catch(e) {} 
-                } 
-            } 
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let txt = this.text.trim();
+                if (txt !== "") {
+                    try {
+                        powermenuWindow.weatherData = JSON.parse(txt);
+                    } catch (e) {
+                    }
+                }
+            }
         }
+
     }
-    Timer { 
+
+    Timer {
         interval: 300000
         running: true
         repeat: true
-        onTriggered: weatherPoller.running = true 
+        onTriggered: weatherPoller.running = true
     }
 
-    property string upHours: "0"
-    property string upMins: "0"
     Process {
         id: uptimePoller
+
         command: ["sh", "-c", "awk '{print int($1/3600)\"h \"int(($1%3600)/60)\"m\"}' /proc/uptime"]
         running: true
-        stdout: StdioCollector { 
-            onStreamFinished: { 
-                let txt = this.text.trim()
-                if (txt !== "") { 
-                    let parts = txt.split("h ")
-                    if (parts.length === 2) { 
-                        powermenuWindow.upHours = parts[0]
-                        powermenuWindow.upMins = parts[1].replace("m", "")
-                    } 
-                } 
-            } 
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let txt = this.text.trim();
+                if (txt !== "") {
+                    let parts = txt.split("h ");
+                    if (parts.length === 2) {
+                        powermenuWindow.upHours = parts[0];
+                        powermenuWindow.upMins = parts[1].replace("m", "");
+                    }
+                }
+            }
         }
+
     }
-    Timer { 
+
+    Timer {
         interval: 60000
         running: true
         repeat: true
-        onTriggered: uptimePoller.running = true 
-    }
-
-    function execCmd(cmdStr) { 
-        Quickshell.execDetached(["bash", "-c", cmdStr])
+        onTriggered: uptimePoller.running = true
     }
 
     // --- UI LAYOUT ---
     RowLayout {
         id: mainLayout
+
         anchors.centerIn: parent
         spacing: 20
 
@@ -175,6 +244,7 @@ FloatingWindow {
         ColumnLayout {
             spacing: 20
             Layout.alignment: Qt.AlignTop
+
             Rectangle {
                 Layout.preferredWidth: 220
                 Layout.preferredHeight: 300
@@ -182,12 +252,14 @@ FloatingWindow {
                 color: powermenuWindow.surface0
                 border.color: powermenuWindow.surface1
                 border.width: 1
+
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 15
-                    
+
                     Rectangle {
                         id: avatarContainer
+
                         Layout.alignment: Qt.AlignHCenter
                         width: 130
                         height: 130
@@ -195,33 +267,40 @@ FloatingWindow {
                         color: powermenuWindow.mantle
                         border.color: powermenuWindow.mauve
                         border.width: 2
-                        
+
                         Item {
                             anchors.fill: parent
                             anchors.margins: 3
+
                             Image {
                                 id: profileImage
+
                                 anchors.fill: parent
                                 source: powermenuWindow.facePath
                                 fillMode: Image.PreserveAspectCrop
                                 visible: false
                                 asynchronous: true
                             }
+
                             Rectangle {
                                 id: avatarMask
+
                                 anchors.fill: parent
                                 radius: 65
                                 visible: false
                                 layer.enabled: true
                             }
+
                             MultiEffect {
                                 anchors.fill: parent
                                 source: profileImage
                                 maskEnabled: true
                                 maskSource: avatarMask
-                                opacity: profileImage.status === Image.Ready ? 1.0 : 0.0
+                                opacity: profileImage.status === Image.Ready ? 1 : 0
                             }
+
                         }
+
                         Text {
                             visible: profileImage.status !== Image.Ready
                             anchors.centerIn: parent
@@ -229,6 +308,7 @@ FloatingWindow {
                             font.pixelSize: 65
                             color: powermenuWindow.text
                         }
+
                     }
 
                     Text {
@@ -238,14 +318,18 @@ FloatingWindow {
                         font.bold: true
                         color: powermenuWindow.mauve
                     }
+
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: "@" + powermenuWindow.hostName
                         font.pixelSize: 15
                         color: powermenuWindow.blue
                     }
+
                 }
+
             }
+
             Rectangle {
                 Layout.preferredWidth: 220
                 Layout.preferredHeight: 90
@@ -253,22 +337,27 @@ FloatingWindow {
                 color: powermenuWindow.surface0
                 border.color: powermenuWindow.surface1
                 border.width: 1
+
                 RowLayout {
                     anchors.centerIn: parent
                     spacing: 15
+
                     Text {
                         text: "🕒"
                         font.pixelSize: 28
                         color: powermenuWindow.mauve
                     }
+
                     ColumnLayout {
                         spacing: 0
+
                         Text {
                             text: powermenuWindow.upHours + "h " + powermenuWindow.upMins + "min"
                             font.pixelSize: 20
                             font.bold: true
                             color: powermenuWindow.text
                         }
+
                         Text {
                             text: "UPTIME"
                             font.pixelSize: 11
@@ -276,15 +365,20 @@ FloatingWindow {
                             color: powermenuWindow.subtext0
                             font.letterSpacing: 1
                         }
+
                     }
+
                 }
+
             }
+
         }
 
         // KOLUMNA 2: POGODA I MUZYKA
         ColumnLayout {
             spacing: 20
             Layout.alignment: Qt.AlignTop
+
             Rectangle {
                 Layout.preferredWidth: 420
                 Layout.preferredHeight: 180
@@ -292,28 +386,35 @@ FloatingWindow {
                 color: powermenuWindow.surface0
                 border.color: powermenuWindow.surface1
                 border.width: 1
+
                 ColumnLayout {
                     anchors.centerIn: parent
                     spacing: 15
+
                     RowLayout {
                         Layout.alignment: Qt.AlignHCenter
                         spacing: 25
+
                         Text {
                             text: powermenuWindow.weatherData ? powermenuWindow.weatherData.forecast[0].icon : "󰖐"
                             font.pixelSize: 45
                             color: powermenuWindow.blue
                             font.family: "Iosevka Nerd Font"
                         }
+
                         Text {
                             text: powermenuWindow.weatherData ? powermenuWindow.weatherData.forecast[0].max + "°C" : "--°C"
                             font.pixelSize: 40
                             font.bold: true
                             color: powermenuWindow.text
                         }
+
                     }
+
                     ColumnLayout {
                         Layout.alignment: Qt.AlignHCenter
                         spacing: 5
+
                         Text {
                             Layout.alignment: Qt.AlignHCenter
                             text: powermenuWindow.weatherData ? powermenuWindow.weatherData.forecast[0].desc : "Ładowanie..."
@@ -321,19 +422,24 @@ FloatingWindow {
                             font.bold: true
                             color: powermenuWindow.mauve
                         }
+
                         Text {
                             Layout.alignment: Qt.AlignHCenter
                             text: "Odczuwalna " + (powermenuWindow.weatherData ? powermenuWindow.weatherData.forecast[0].feels_like : "--") + "°C"
                             font.pixelSize: 13
                             color: powermenuWindow.subtext0
                         }
+
                     }
+
                 }
+
             }
 
             // PANEL MUZYCZNY
             Rectangle {
                 id: musicTile
+
                 Layout.preferredWidth: 420
                 Layout.preferredHeight: 210
                 radius: 30
@@ -344,19 +450,13 @@ FloatingWindow {
                 // TŁO KAFELKA - OKŁADKA (ZAOKRĄGLONA)
                 Item {
                     id: backgroundWrapper
+
                     anchors.fill: parent
                     layer.enabled: true
-                    layer.effect: MultiEffect {
-                        maskEnabled: true
-                        maskSource: Rectangle {
-                            width: backgroundWrapper.width
-                            height: backgroundWrapper.height
-                            radius: 30
-                        }
-                    }
 
                     Image {
                         id: bgArtImg
+
                         anchors.fill: parent
                         source: powermenuWindow.musicData.artUrl ? (powermenuWindow.musicData.artUrl.startsWith("file://") ? powermenuWindow.musicData.artUrl : "file://" + powermenuWindow.musicData.artUrl) : ""
                         fillMode: Image.PreserveAspectCrop
@@ -368,22 +468,35 @@ FloatingWindow {
                         color: "black"
                         opacity: 0.6
                     }
+
+                    layer.effect: MultiEffect {
+                        maskEnabled: true
+
+                        maskSource: Rectangle {
+                            width: backgroundWrapper.width
+                            height: backgroundWrapper.height
+                            radius: 30
+                        }
+
+                    }
+
                 }
 
                 RowLayout {
                     anchors.fill: parent
                     anchors.margins: 25
                     spacing: 25
-                    
+
                     Rectangle {
                         id: discContainer
+
                         Layout.preferredWidth: 140
                         Layout.preferredHeight: 140
                         radius: 70
                         color: powermenuWindow.surface1
                         border.width: 3
                         border.color: powermenuWindow.musicData.status === "Playing" ? powermenuWindow.mauve : powermenuWindow.surface2
-                        
+
                         Rectangle {
                             z: -1
                             anchors.centerIn: parent
@@ -391,35 +504,47 @@ FloatingWindow {
                             height: parent.height + 15
                             radius: 77
                             color: powermenuWindow.mauve
-                            opacity: powermenuWindow.musicData.status === "Playing" ? 0.3 : 0.0
+                            opacity: powermenuWindow.musicData.status === "Playing" ? 0.3 : 0
                             layer.enabled: true
-                            layer.effect: MultiEffect { blurEnabled: true; blurMax: 24; blur: 1.0 }
+
+                            layer.effect: MultiEffect {
+                                blurEnabled: true
+                                blurMax: 24
+                                blur: 1
+                            }
+
                         }
-                        
+
                         Item {
                             anchors.fill: parent
                             anchors.margins: 3
+
                             Image {
                                 id: artImg
+
                                 anchors.fill: parent
                                 source: bgArtImg.source
                                 fillMode: Image.PreserveAspectCrop
                                 visible: false
                             }
+
                             Rectangle {
                                 id: discMask
+
                                 anchors.fill: parent
                                 radius: 67
                                 visible: false
                                 layer.enabled: true
                             }
+
                             MultiEffect {
                                 anchors.fill: parent
                                 source: artImg
                                 maskEnabled: true
                                 maskSource: discMask
-                                opacity: artImg.status === Image.Ready ? 1.0 : 0.0
+                                opacity: artImg.status === Image.Ready ? 1 : 0
                             }
+
                             Rectangle {
                                 width: 30
                                 height: 30
@@ -428,7 +553,9 @@ FloatingWindow {
                                 opacity: 0.9
                                 anchors.centerIn: parent
                             }
+
                         }
+
                         NumberAnimation on rotation {
                             from: 0
                             to: 360
@@ -436,14 +563,17 @@ FloatingWindow {
                             loops: Animation.Infinite
                             running: powermenuWindow.musicData.status === "Playing"
                         }
+
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 10
+
                         ColumnLayout {
                             spacing: 2
                             Layout.fillWidth: true
+
                             Text {
                                 text: powermenuWindow.musicData.title
                                 color: powermenuWindow.text
@@ -452,6 +582,7 @@ FloatingWindow {
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
+
                             Text {
                                 text: powermenuWindow.musicData.artist
                                 color: powermenuWindow.subtext1
@@ -460,14 +591,18 @@ FloatingWindow {
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }
+
                         }
+
                         RowLayout {
                             Layout.alignment: Qt.AlignHCenter
                             spacing: 20
+
                             MouseArea {
                                 width: 30
                                 height: 30
                                 onClicked: powermenuWindow.execCmd("playerctl previous")
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰒮"
@@ -475,12 +610,15 @@ FloatingWindow {
                                     font.pixelSize: 22
                                     color: powermenuWindow.text
                                 }
+
                             }
+
                             Rectangle {
                                 width: 44
                                 height: 44
                                 radius: 22
                                 color: powermenuWindow.mauve
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: powermenuWindow.musicData.status === "Playing" ? "󰏤" : "󰐊"
@@ -488,15 +626,19 @@ FloatingWindow {
                                     font.pixelSize: 22
                                     color: powermenuWindow.base
                                 }
+
                                 MouseArea {
                                     anchors.fill: parent
                                     onClicked: powermenuWindow.execCmd("playerctl play-pause")
                                 }
+
                             }
+
                             MouseArea {
                                 width: 30
                                 height: 30
                                 onClicked: powermenuWindow.execCmd("playerctl next")
+
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰒭"
@@ -504,53 +646,65 @@ FloatingWindow {
                                     font.pixelSize: 22
                                     color: powermenuWindow.text
                                 }
+
                             }
+
                         }
+
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 4
+
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 6
                                 radius: 3
                                 color: "#20ffffff"
+
                                 Rectangle {
                                     width: parent.width * (powermenuWindow.musicData.percent / 100)
                                     height: parent.height
                                     radius: 3
                                     color: powermenuWindow.mauve
                                 }
+
                             }
+
                             RowLayout {
                                 Text {
                                     text: powermenuWindow.musicData.positionStr
                                     font.pixelSize: 9
                                     color: powermenuWindow.subtext0
                                 }
-                                Item { Layout.fillWidth: true }
+
+                                Item {
+                                    Layout.fillWidth: true
+                                }
+
                                 Text {
                                     text: powermenuWindow.musicData.lengthStr
                                     font.pixelSize: 9
                                     color: powermenuWindow.subtext0
                                 }
+
                             }
+
                         }
+
                     }
+
                 }
+
             }
+
         }
 
         // KOLUMNA 3: AKCJE
         ColumnLayout {
             spacing: 20
             Layout.alignment: Qt.AlignTop
+
             Repeater {
-                model: ListModel {
-                    ListElement { icon: "󰍃"; col: "peach"; cmd: "loginctl terminate-user $USER" }
-                    ListElement { icon: "󰌾"; col: "green"; cmd: "hyprlock" }
-                    ListElement { icon: "󰑓"; col: "blue"; cmd: "systemctl reboot" }
-                    ListElement { icon: "󰐥"; col: "red"; cmd: "systemctl poweroff" }
-                }
                 Rectangle {
                     Layout.preferredWidth: 90
                     Layout.preferredHeight: 90
@@ -558,6 +712,7 @@ FloatingWindow {
                     color: btnMa.containsMouse ? powermenuWindow.surface1 : powermenuWindow.surface0
                     border.color: btnMa.containsMouse ? powermenuWindow[model.col] : powermenuWindow.surface1
                     border.width: 2
+
                     Text {
                         anchors.centerIn: parent
                         text: model.icon
@@ -565,14 +720,48 @@ FloatingWindow {
                         font.pixelSize: 32
                         color: powermenuWindow[model.col]
                     }
+
                     MouseArea {
                         id: btnMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: powermenuWindow.execCmd(model.cmd)
                     }
+
                 }
+
+                model: ListModel {
+                    ListElement {
+                        icon: "󰍃"
+                        col: "peach"
+                        cmd: "loginctl terminate-user $USER"
+                    }
+
+                    ListElement {
+                        icon: "󰌾"
+                        col: "green"
+                        cmd: "hyprlock"
+                    }
+
+                    ListElement {
+                        icon: "󰑓"
+                        col: "blue"
+                        cmd: "systemctl reboot"
+                    }
+
+                    ListElement {
+                        icon: "󰐥"
+                        col: "red"
+                        cmd: "systemctl poweroff"
+                    }
+
+                }
+
             }
+
         }
+
     }
+
 }

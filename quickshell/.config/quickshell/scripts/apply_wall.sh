@@ -21,6 +21,7 @@ if [[ "$MIME_TYPE" == video/* ]]; then
   matugen image "$TEMP_FRAME" --mode dark --source-color-index 0
 
   ICON_PATH="$TEMP_FRAME"
+  ANALYSIS_PATH="$TEMP_FRAME"
 
   swww clear
   mpvpaper -o 'loop --hwdec=auto --no-audio --cache=no --demuxer-max-bytes=10M --vd-lavc-threads=1 --profile=fast --vd-lavc-fast --swapchain-depth=1' '*' "$WALLPAPER_PATH" &
@@ -29,10 +30,11 @@ else
   swww query || swww-daemon &
   awww img "$WALLPAPER_PATH" --transition-type "$TRANSITION" --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1
   matugen image "$WALLPAPER_PATH" --mode dark --source-color-index 0
+  ANALYSIS_PATH="$WALLPAPER_PATH"
 fi
 
 if [ -f "$HOME/.config/quickshell/scripts/update_clock.sh" ]; then
-  bash "$HOME/.config/quickshell/scripts/update_clock.sh" "$WALLPAPER_PATH" &
+  bash "$HOME/.config/quickshell/scripts/update_clock.sh" "$ANALYSIS_PATH" &
   disown
 fi
 

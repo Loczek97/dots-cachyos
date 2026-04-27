@@ -1,12 +1,11 @@
-pragma Singleton
 import QtQuick
+pragma Singleton
 
 QtObject {
     id: root
 
-    property ListModel history: ListModel {}
-    property ListModel popups: ListModel {}
-
+    property ListModel history
+    property ListModel popups
     property int _popupCounter: 0
 
     function removePopup(uid) {
@@ -19,4 +18,11 @@ QtObject {
     }
 
     Component.onCompleted: console.log("NotificationService: Singleton initialized")
+
+    history: ListModel {
+    }
+
+    popups: ListModel {
+    }
+
 }
