@@ -12,10 +12,9 @@ PanelWindow {
     
     MatugenTheme { id: theme }
 
-    implicitWidth: 400
+    implicitWidth: 450
     implicitHeight: 500
     
-    // In Quickshell PanelWindow, these are direct properties, not an 'anchors' object
     anchors.top: true
     anchors.left: true
     
@@ -25,13 +24,11 @@ PanelWindow {
     margins.left: targetX
     margins.top: targetY
 
-    // Behavior on margins is problematic in Quickshell, so we will use 
-    // a separate property for animated positioning if needed later.
-    // For now, let's just get it visible.
+    readonly property string posFilePath: Quickshell.env("HOME") + "/.config/quickshell/desktopclock/clock_pos.json"
 
     Process {
         id: posReader
-        command: ["cat", Quickshell.env("HOME") + "/.config/quickshell/desktopclock/clock_pos.json"]
+        command: ["cat", desktopClock.posFilePath]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -46,13 +43,13 @@ PanelWindow {
         }
     }
 
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: posReader.running = true
+    FileView {
+        path: desktopClock.posFilePath
+        watchChanges: true
+        onFileChanged: posReader.running = true
     }
+
+    Component.onCompleted: posReader.running = true
 
     Column {
         id: mainLayout
