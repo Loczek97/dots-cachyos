@@ -191,6 +191,8 @@ if [[ "$ACTION" == "close" ]]; then
   pkill -9 -u $USER -f "quickshell.*Popup.qml" 2>/dev/null
   pkill -9 -u $USER -f "quickshell.*TaskManager.qml" 2>/dev/null
   pkill -9 -u $USER -f "quickshell.*WallpaperPicker.qml" 2>/dev/null
+  pkill -9 -u $USER -f "quickshell.*MimeManager.qml" 2>/dev/null
+  pkill -9 -u $USER -f "quickshell.*Launcher.qml" 2>/dev/null
   exit 0
 fi
 
@@ -206,6 +208,8 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
   taskmanager) QML="taskmanager/TaskManager.qml" ;;
   mixer) QML="mixer/MixerPopup.qml" ;;
   dashboard) QML="dashboard/DashboardPopup.qml" ;;
+  mimemanager) QML="mimemanager/MimeManager.qml" ;;
+  launcher) QML="launcher/Launcher.qml" ;;
   wallpaper)
     QML="wallpaper/WallpaperPicker.qml"
     handle_wallpaper_prep

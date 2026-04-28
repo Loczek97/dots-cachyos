@@ -1,5 +1,5 @@
-import QtCharts
 //@ pragma UseQApplication
+import QtCharts
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
