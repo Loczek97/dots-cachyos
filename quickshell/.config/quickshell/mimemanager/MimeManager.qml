@@ -37,12 +37,15 @@ ShellRoot {
     property var mimeModel: []
     property string searchQuery: ""
     property bool appPopupVisible: false
+    property bool addMimePopupVisible: false
 
     Shortcut {
         sequence: "Escape"
         onActivated: {
             if (root.appPopupVisible) {
                 root.appPopupVisible = false;
+            } else if (root.addMimePopupVisible) {
+                root.addMimePopupVisible = false;
             } else {
                 Qt.quit();
             }
@@ -168,22 +171,13 @@ ShellRoot {
                     RowLayout {
                         Layout.fillWidth: true
                         Text {
-                            text: "MimeManager"
+                            text: "Domyślne aplikacje"
                             font.pixelSize: 32
+                            font.family: "JetBrainsMono Nerd Font"
                             font.bold: true
                             color: root.mauve
                         }
                         Item { Layout.fillWidth: true }
-                        Button {
-                            text: "✕"
-                            flat: true
-                            onClicked: Qt.quit()
-                            contentItem: Text {
-                                text: parent.text
-                                color: root.subtext0
-                                font.pixelSize: 24
-                            }
-                        }
                     }
 
                     // --- SEARCH BAR ---
@@ -203,7 +197,7 @@ ShellRoot {
 
                             Text {
                                 text: "󰍉"
-                                font.family: "CaskaydiaCove Nerd Font"
+                                font.family: "CaskaydiaCoveNerdFont-Regular"
                                 font.pixelSize: 22
                                 color: root.mauve
                             }
@@ -219,6 +213,27 @@ ShellRoot {
                                 placeholderTextColor: root.subtext0
                                 onTextChanged: root.searchQuery = text.toLowerCase()
                                 background: Item {}
+                            }
+
+                            // Add New Button
+                            Rectangle {
+                                width: 40
+                                height: 40
+                                radius: 10
+                                color: addMouse.containsMouse ? root.surface1 : "transparent"
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰐕"
+                                    font.family: "CaskaydiaCoveNerdFont-Regular"
+                                    font.pixelSize: 24
+                                    color: root.mauve
+                                }
+                                MouseArea {
+                                    id: addMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: root.addMimePopupVisible = true
+                                }
                             }
                         }
                     }
@@ -296,11 +311,11 @@ ShellRoot {
                 }
             }
 
-            // --- OVERLAY & MODAL ---
+            // --- OVERLAY & MODALS ---
             Rectangle {
                 id: overlay
                 anchors.fill: parent
-                visible: root.appPopupVisible
+                visible: root.appPopupVisible || root.addMimePopupVisible
                 opacity: visible ? 1 : 0
                 color: "#90000000"
                 radius: 35
@@ -312,9 +327,107 @@ ShellRoot {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: root.appPopupVisible = false
+                    onClicked: {
+                        root.appPopupVisible = false;
+                        root.addMimePopupVisible = false;
+                    }
                 }
 
+                // --- ADD MIME MODAL ---
+                Rectangle {
+                    id: addMimeModal
+                    width: 550
+                    height: 350
+                    anchors.centerIn: parent
+                    color: root.mantle
+                    radius: 30
+                    border.color: root.surface1
+                    border.width: 2
+                    scale: root.addMimePopupVisible ? 1 : 0.9
+                    opacity: root.addMimePopupVisible ? 1 : 0
+                    visible: opacity > 0
+
+                    Behavior on scale {
+                        NumberAnimation { duration: 300; easing.type: Easing.OutBack }
+                    }
+                    Behavior on opacity {
+                        NumberAnimation { duration: 200 }
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 35
+                        spacing: 25
+
+                        Text {
+                            text: "Dodaj nowy wpis"
+                            color: root.mauve
+                            font.pixelSize: 24
+                            font.family: "JetBrainsMono Nerd Font"
+                            font.bold: true
+                        }
+
+                        Text {
+                            text: "Wprowadź typ MIME, dla którego chcesz ustawić domyślną aplikację."
+                            color: root.subtext0
+                            font.pixelSize: 14
+                            wrapMode: Text.Wrap
+                            Layout.fillWidth: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 55
+                            color: root.surface0
+                            radius: 14
+                            border.color: root.surface2
+                            border.width: 1
+
+                            TextField {
+                                id: newMimeInput
+                                anchors.fill: parent
+                                anchors.leftMargin: 20
+                                anchors.rightMargin: 20
+                                placeholderText: "np. text/html lub application/pdf"
+                                color: root.text
+                                font.pixelSize: 16
+                                placeholderTextColor: root.subtext0
+                                background: Item {}
+                                focus: root.addMimePopupVisible
+                            }
+                        }
+
+                        Button {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 55
+                            text: "Wybierz aplikację"
+                            onClicked: {
+                                if (newMimeInput.text.includes("/")) {
+                                    let mime = newMimeInput.text.trim();
+                                    root.addMimePopupVisible = false;
+                                    appModal.openFor(mime);
+                                    newMimeInput.text = "";
+                                }
+                            }
+                            background: Rectangle {
+                                color: parent.hovered ? root.mauve : "transparent"
+                                radius: 14
+                                border.color: root.mauve
+                                border.width: 2
+                            }
+                            contentItem: Text {
+                                text: parent.text
+                                color: parent.hovered ? root.base : root.mauve
+                                font.pixelSize: 16
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
+                }
+
+                // --- APP SELECTION MODAL ---
                 Rectangle {
                     id: appModal
                     width: 550
@@ -326,6 +439,7 @@ ShellRoot {
                     border.width: 2
                     scale: root.appPopupVisible ? 1 : 0.9
                     opacity: root.appPopupVisible ? 1 : 0
+                    visible: opacity > 0
 
                     Behavior on scale {
                         NumberAnimation { duration: 300; easing.type: Easing.OutBack }
@@ -336,9 +450,12 @@ ShellRoot {
 
                     property string currentMime: ""
                     property var apps: []
+                    property string appSearchQuery: ""
 
                     function openFor(mime) {
                         currentMime = mime;
+                        appSearchQuery = "";
+                        appSearchInput.text = "";
                         apps = [];
                         listAppsProc.command = [Quickshell.env("HOME") + "/.config/quickshell/mimemanager/mimemanager.sh", "list_apps", mime];
                         listAppsProc.running = true;
@@ -368,35 +485,77 @@ ShellRoot {
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 35
-                        spacing: 25
+                        spacing: 20
 
-                        Text {
-                            text: "Wybierz aplikację dla:"
-                            color: root.subtext1
-                            font.pixelSize: 15
+                        ColumnLayout {
+                            spacing: 5
+                            Text {
+                                text: "Wybierz aplikację dla:"
+                                color: root.subtext1
+                                font.pixelSize: 14
+                            }
+                            Text {
+                                text: appModal.currentMime
+                                color: root.mauve
+                                font.pixelSize: 20
+                                font.bold: true
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
                         }
-                        Text {
-                            text: appModal.currentMime
-                            color: root.mauve
-                            font.pixelSize: 22
-                            font.bold: true
+
+                        // App Search Bar
+                        Rectangle {
                             Layout.fillWidth: true
-                            elide: Text.ElideRight
+                            Layout.preferredHeight: 50
+                            color: root.surface0
+                            radius: 12
+                            border.color: root.surface1
+                            border.width: 1
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 15
+                                anchors.rightMargin: 15
+                                spacing: 10
+
+                                Text {
+                                    text: "󰍉"
+                                    font.family: "CaskaydiaCoveNerdFont-Regular"
+                                    font.pixelSize: 18
+                                    color: root.mauve
+                                }
+
+                                TextField {
+                                    id: appSearchInput
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    placeholderText: "Szukaj aplikacji..."
+                                    color: root.text
+                                    font.pixelSize: 14
+                                    placeholderTextColor: root.subtext0
+                                    background: Item {}
+                                    onTextChanged: appModal.appSearchQuery = text.toLowerCase()
+                                }
+                            }
                         }
 
                         ListView {
                             id: appList
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            model: appModal.apps
+                            model: appModal.apps.filter(app => 
+                                app.name.toLowerCase().includes(appModal.appSearchQuery) || 
+                                app.id.toLowerCase().includes(appModal.appSearchQuery)
+                            )
                             clip: true
-                            spacing: 12
+                            spacing: 8
                             
                             delegate: Rectangle {
                                 width: ListView.view.width
                                 height: 60
                                 color: appMa.containsMouse ? root.surface1 : root.surface0
-                                radius: 14
+                                radius: 12
                                 border.color: appMa.containsMouse ? root.mauve : "transparent"
                                 border.width: 1
                                 
@@ -413,18 +572,34 @@ ShellRoot {
 
                                 RowLayout {
                                     anchors.fill: parent
-                                    anchors.margins: 18
-                                    Text {
-                                        text: modelData.name
-                                        color: root.text
-                                        font.pixelSize: 16
-                                        font.bold: true
+                                    anchors.margins: 12
+                                    spacing: 15
+
+                                    Image {
+                                        source: modelData.icon ? "image://icon/" + modelData.icon : ""
+                                        Layout.preferredWidth: 32
+                                        Layout.preferredHeight: 32
+                                        fillMode: Image.PreserveAspectFit
+                                        visible: source != ""
                                     }
-                                    Item { Layout.fillWidth: true }
-                                    Text {
-                                        text: modelData.id
-                                        color: root.subtext0
-                                        font.pixelSize: 12
+
+                                    Column {
+                                        Layout.fillWidth: true
+                                        Text {
+                                            text: modelData.name
+                                            color: root.text
+                                            font.pixelSize: 15
+                                            font.bold: true
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                        }
+                                        Text {
+                                            text: modelData.id
+                                            color: root.subtext0
+                                            font.pixelSize: 11
+                                            elide: Text.ElideRight
+                                            width: parent.width
+                                        }
                                     }
                                 }
                             }
@@ -432,7 +607,7 @@ ShellRoot {
 
                         Button {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 55
+                            Layout.preferredHeight: 50
                             text: "Resetuj do domyślnych"
                             onClicked: {
                                 setAppProc.command = [Quickshell.env("HOME") + "/.config/quickshell/mimemanager/mimemanager.sh", "reset", appModal.currentMime];
@@ -441,14 +616,14 @@ ShellRoot {
                             }
                             background: Rectangle {
                                 color: parent.hovered ? root.red : "transparent"
-                                radius: 14
+                                radius: 12
                                 border.color: root.red
                                 border.width: 2
                             }
                             contentItem: Text {
                                 text: parent.text
                                 color: parent.hovered ? root.base : root.red
-                                font.pixelSize: 16
+                                font.pixelSize: 15
                                 font.bold: true
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter

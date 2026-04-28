@@ -1,94 +1,17 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-ShellRoot {
+PanelWindow {
     id: root
 
     property QtObject theme: themeLoader.item ? themeLoader.item : dummyTheme
+    readonly property int containerRadius: 30
+    readonly property int itemRadius: 12
     
-    // --- COLOR MAPPINGS ---
-    readonly property color base: theme.base
-    readonly property color text: theme.text
-    readonly property color subtext1: theme.subtext1
-    readonly property color surface2: theme.surface2
-    readonly property color surface1: theme.surface1
-    readonly property color surface0: theme.surface0
-    readonly property color mauve: theme.mauve
-    readonly property color primary: theme.primary
-
-    // --- LOGIC ---
-    property var allApps: []
-    property var filteredResults: []
-    property string searchQuery: ""
-    property int currentIndex: 0
-    property bool isSearching: false
-
-    function runSelected() {
-        if (filteredResults.length > 0 && currentIndex >= 0) {
-            let item = filteredResults[currentIndex];
-            if (item.type === "app") {
-                Quickshell.execDetached(["bash", "-c", item.exec]);
-            } else if (item.type === "web") {
-                Quickshell.execDetached(["xdg-open", "https://www.google.com/search?q=" + encodeURIComponent(searchQuery)]);
-            } else if (item.type === "term") {
-                Quickshell.execDetached(["kitty", "--hold", "bash", "-c", searchQuery]);
-            }
-            Qt.quit();
-        }
-    }
-
-    function filterResults() {
-        if (!searchQuery) {
-            isSearching = false;
-            filteredResults = [];
-            currentIndex = 0;
-            return;
-        }
-        
-        isSearching = true;
-
-        let results = [];
-        let q = searchQuery.toLowerCase();
-
-        let appMatches = allApps.filter(app => 
-            app.name.toLowerCase().includes(q)
-        ).slice(0, 5).map(app => ({
-            "name": app.name,
-            "desc": app.exec,
-            "icon": app.icon,
-            "type": "app",
-            "exec": app.exec
-        }));
-        results = results.concat(appMatches);
-
-        results.push({
-            "name": "SZUKAJ W SIECI: " + searchQuery,
-            "desc": "Otwórz w przeglądarce",
-            "icon": "󰖟",
-            "type": "web"
-        });
-
-        results.push({
-            "name": "URUCHOM KOMENDĘ: " + searchQuery,
-            "desc": "Wykonaj w terminalu kitty",
-            "icon": "󰆍",
-            "type": "term"
-        });
-
-        filteredResults = results;
-        currentIndex = 0;
-    }
-
-    Shortcut {
-        sequence: "Escape"
-        onActivated: Qt.quit()
-    }
-
     Loader {
         id: themeLoader
         source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/MatugenTheme.qml"
@@ -107,228 +30,241 @@ ShellRoot {
         id: dummyTheme
         property color base: "#1e1e2e"
         property color text: "#cdd6f4"
-        property color subtext1: "#bac2de"
-        property color surface2: "#585b70"
-        property color surface1: "#45475a"
+        property color subtext0: "#a6adc8"
         property color surface0: "#313244"
-        property color mauve: "#cba6f7"
         property color primary: "#cba6f7"
+        property color peach: "#fab387"
     }
 
+    // --- Wayland Layer Shell Config ---
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "launcher"
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    
+    exclusionMode: ExclusionMode.Ignore
+    
+    anchors {
+        top: true
+        bottom: true
+        left: true
+        right: true
+    }
+
+    margins {
+        top: 0
+        bottom: 0
+        left: 0
+        right: 0
+    }
+
+    color: "#80000000" // Dimmed background overlay
+
+    // --- Logic & State ---
+    property string searchQuery: ""
+    property var results: []
+    property int currentIndex: 0
+    property bool showPreview: false
+
+    function close() { Qt.quit(); }
+    
+    function runSelected() {
+        if (results.length > 0 && currentIndex < results.length) {
+            let item = results[currentIndex];
+            if (item.path) {
+                if (item.type === "app") {
+                    Quickshell.execDetached(["bash", "-c", "grep '^Exec=' " + item.path + " | head -1 | cut -d'=' -f2 | sed 's/%[fFuU]//g' | bash &"]);
+                } else if (item.type === "web") {
+                    Quickshell.execDetached(["xdg-open", "https://www.google.com/search?q=" + encodeURIComponent(item.path)]);
+                } else if (item.type === "term") {
+                    Quickshell.execDetached(["kitty", "--hold", "sh", "-c", item.path]);
+                } else {
+                    Quickshell.execDetached(["xdg-open", item.path]);
+                }
+                close();
+            }
+        }
+    }
+
+    function copyPath() {
+        if (results.length > 0 && currentIndex < results.length) {
+            Quickshell.execDetached(["bash", "-c", "echo -n '" + results[currentIndex].path + "' | wl-copy"]);
+        }
+    }
+
+    // --- Search Process ---
     Process {
-        id: getAppsProc
-        running: true
-        command: [Quickshell.env("HOME") + "/.config/quickshell/launcher/get_apps.sh"]
+        id: searchProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/launcher/search.sh", searchQuery]
         stdout: StdioCollector {
             onStreamFinished: {
                 if (this.text) {
                     try {
-                        allApps = JSON.parse(this.text);
-                        searchInput.forceActiveFocus();
-                    } catch (e) {
-                        console.error("Apps parse error:", e);
-                    }
+                        results = JSON.parse(this.text);
+                        currentIndex = 0;
+                    } catch (e) { results = []; }
+                } else {
+                    results = [];
                 }
             }
         }
     }
 
-    PanelWindow {
-        id: window
-        implicitWidth: 500
-        implicitHeight: 488
-        visible: true
-        color: "transparent"
-        focusable: true
+    Timer {
+        id: debounceTimer
+        interval: 150
+        onTriggered: searchProc.running = true
+    }
 
+    onSearchQueryChanged: {
+        searchProc.running = false;
+        debounceTimer.restart();
+    }
 
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "launcher"
+    // --- UI Layout ---
+    Rectangle {
+        id: mainContainer
+        width: 700
         
-        anchors.top: true
-        anchors.left: true
-        margins.top: 150
-        margins.left: (Screen.width - implicitWidth) / 2
+        // Dynamic height calculation:
+        // 80 (base/search bar) + (results count * 50px per item) + (10px margin if results exist)
+        // Max height capped at 550
+        height: {
+            if (results.length === 0) return 80;
+            let targetHeight = 80 + (results.length * 50) + 20;
+            return Math.min(targetHeight, 550);
+        }
         
-        exclusionMode: ExclusionMode.Ignore
+        // Positioning in the upper half
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: parent.height / 5
+        
+        radius: containerRadius
+        color: root.theme.base
+        border.color: root.theme.surface0
+        border.width: 1
+        clip: true
 
-        Rectangle {
-            width: parent.width
-            height: mainColumn.height + 24
-            color: base
-            radius: 20
-            border.color: mauve
-            border.width: 2
-            clip: true
-            
-            opacity: window.visible ? 1 : 0
-            scale: window.visible ? 1 : 0.95
+        Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutExpo } }
 
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-            Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+        Item {
+            anchors.fill: parent
+            anchors.margins: 10
 
-            Column {
-                id: mainColumn
-                width: parent.width - 24
-                x: 12
-                y: 12
-                spacing: 8
+            RowLayout {
+                id: searchBarRow
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 60
+                spacing: 15
 
-                // --- SEARCH BAR ---
-                Item {
-                    width: parent.width
-                    height: 50
-
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: 15
-                        anchors.rightMargin: 15
-                        spacing: 12
-                        
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: ""
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 24
-                            color: primary
-                        }
-
-                        TextInput {
-                            id: searchInput
-                            width: parent.width - 60
-                            anchors.verticalCenter: parent.verticalCenter
-                            font.pixelSize: 18
-                            font.weight: Font.DemiBold
-                            color: "#ffffff"
-                            
-                            cursorDelegate: Rectangle {
-                                width: 1
-                                color: "#ffffff"
-                            }
-
-                            focus: true
-                            selectByMouse: true
-                            
-                            onTextChanged: {
-                                searchQuery = text;
-                                filterResults();
-                            }
-
-                            Keys.onPressed: (event) => {
-                                if (event.key === Qt.Key_Down) {
-                                    currentIndex = Math.min(currentIndex + 1, filteredResults.length - 1);
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Up) {
-                                    currentIndex = Math.max(currentIndex - 1, 0);
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                    runSelected();
-                                    event.accepted = true;
-                                }
-                            }
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "Szukaj..."
-                                color: "#bbbbbb"
-                                font: parent.font
-                                visible: !parent.text && !parent.activeFocus
-                            }
-                        }
-                    }
+                Text {
+                    text: ""
+                    font.pixelSize: 24
+                    color: root.theme.primary
+                    leftPadding: 10
                 }
 
-                // --- RESULTS ---
-                Item {
-                    id: listContainer
-                    width: parent.width
-                    height: isSearching && filteredResults.length > 0 ? resultsList.contentHeight + 8 : 0
-                    clip: true
+                TextInput {
+                    id: searchInput
+                    Layout.fillWidth: true
+                    font.pixelSize: 22
+                    font.family: "CaskaydiaCoveNerdFont-Regular"
+                    font.weight: Font.Medium
+                    color: root.theme.text
+                    focus: true
+                    verticalAlignment: TextInput.AlignVCenter
                     
-                    Behavior on height { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                    onTextChanged: root.searchQuery = text
 
-                    ListView {
-                        id: resultsList
-                        width: parent.width
-                        height: contentHeight
-                        anchors.top: parent.top
-                        leftMargin: 4
-                        rightMargin: 4
-                        bottomMargin: 4
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Escape) root.close();
+                        if (event.key === Qt.Key_Down) root.currentIndex = Math.min(root.results.length - 1, root.currentIndex + 1);
+                        if (event.key === Qt.Key_Up) root.currentIndex = Math.max(0, root.currentIndex - 1);
+                        if (event.key === Qt.Key_Return) root.runSelected();
+                        if (event.key === Qt.Key_Space) root.showPreview = !root.showPreview;
+                        if (event.key === Qt.Key_C && event.modifiers & Qt.ControlModifier) root.copyPath();
+                    }
+                }
+            }
 
-                        model: filteredResults
+            // Results Area - Fills remaining space
+            RowLayout {
+                id: resultsArea
+                anchors.top: searchBarRow.bottom
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: 10
+                visible: results.length > 0
+                spacing: 15
 
-                        spacing: 4
-                        currentIndex: root.currentIndex
-                        
-                        delegate: Rectangle {
-                            width: ListView.view.width
-                            height: 54
-                            radius: 12
-                            color: index === root.currentIndex ? surface1 : "transparent"
-                            border.color: index === root.currentIndex ? mauve : "transparent"
-                            border.width: 1
-                            
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                            
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 18
-                                anchors.rightMargin: 18
-                                spacing: 15
+                ListView {
+                    id: resultsList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    model: results
+                    clip: true
+                    currentIndex: root.currentIndex
 
-                                Item {
-                                    Layout.preferredWidth: 26
-                                    Layout.preferredHeight: 26
-                                    Layout.alignment: Qt.AlignVCenter
+                    delegate: Rectangle {
+                        width: resultsList.width
+                        height: 50
+                        radius: itemRadius
+                        color: index === root.currentIndex ? root.theme.surface0 : "transparent"
 
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            spacing: 15
+
+                            Loader {
+                                Layout.preferredWidth: 32
+                                Layout.preferredHeight: 32
+                                sourceComponent: (modelData.type === "app" || modelData.type === "web" || modelData.type === "term") && modelData.icon ? appIcon : fontIcon
+
+                                Component {
+                                    id: appIcon
                                     Image {
-                                        anchors.fill: parent
-                                        visible: modelData.type === "app"
-                                        source: modelData.type === "app" ? "image://icon/" + modelData.icon : ""
+                                        source: "image://icon/" + modelData.icon
+                                        width: 32
+                                        height: 32
                                         fillMode: Image.PreserveAspectFit
                                     }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: modelData.type !== "app"
-                                        text: modelData.icon
-                                        color: index === root.currentIndex ? primary : mauve
-                                        font.pixelSize: 22
-                                    }
                                 }
 
-                                ColumnLayout {
-                                    spacing: 1
-                                    Layout.fillWidth: true
+                                Component {
+                                    id: fontIcon
                                     Text {
-                                        text: modelData.name
-                                        color: index === root.currentIndex ? primary : "#ffffff"
-                                        font.pixelSize: 15
-                                        font.weight: index === root.currentIndex ? Font.Bold : Font.Medium
-                                        elide: Text.ElideRight
-                                        Layout.fillWidth: true
-                                    }
-                                    Text {
-                                        text: modelData.desc
-                                        color: index === root.currentIndex ? primary : "#ffffff"
-                                        font.pixelSize: 11
-                                        font.weight: index === root.currentIndex ? Font.Medium : Font.Normal
-                                        elide: Text.ElideRight
-                                        Layout.fillWidth: true
-                                        opacity: index === root.currentIndex ? 1.0 : 0.7
+                                        text: {
+                                            if (modelData.type === "content") return "󰈙";
+                                            if (modelData.mime.startsWith("image/")) return "󰋩";
+                                            if (modelData.mime.startsWith("video/")) return "󰈫";
+                                            return "󰈔";
+                                        }
+                                        color: index === root.currentIndex ? root.theme.primary : root.theme.subtext0
+                                        font.pixelSize: 22
+                                        anchors.centerIn: parent
                                     }
                                 }
                             }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    root.currentIndex = index;
-                                    runSelected();
+                            Column {
+                                Layout.fillWidth: true
+                                Text { 
+                                    text: modelData.name; 
+                                    color: root.theme.text; 
+                                    font.pixelSize: 16; 
+                                    elide: Text.ElideRight 
                                 }
-                                hoverEnabled: true
-                                onEntered: root.currentIndex = index
+                                Text { 
+                                    text: modelData.path; 
+                                    color: root.theme.subtext0; 
+                                    font.pixelSize: 10; 
+                                    elide: Text.ElideRight;
+                                    visible: index === root.currentIndex
+                                }
                             }
                         }
                     }
@@ -336,4 +272,6 @@ ShellRoot {
             }
         }
     }
+
+    Component.onCompleted: searchInput.forceActiveFocus()
 }
