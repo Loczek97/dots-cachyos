@@ -62,24 +62,33 @@ RAM=$(echo "scale=2; $RAM_USED / $RAM_TOTAL * 100" | bc)
 [ -z "$RAM" ] && RAM=0
 
 # --- NVIDIA GPU ---
+GPU_UTIL=0
+GPU_MEM_UTIL=0
+GPU_TEMP=0
+GPU_MEM_TOTAL=0
+GPU_MEM_USED=0
+
 if command -v nvidia-smi &> /dev/null; then
-    GPU_DATA=$(nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu,memory.total,memory.used --format=csv,noheader,nounits | tr -d ' ')
-    GPU_UTIL=$(echo $GPU_DATA | cut -d',' -f1)
-    GPU_TEMP=$(echo $GPU_DATA | cut -d',' -f3)
-    GPU_MEM_TOTAL=$(echo $GPU_DATA | cut -d',' -f4)
-    GPU_MEM_USED=$(echo $GPU_DATA | cut -d',' -f5)
-    # Calculate actual memory usage percentage instead of controller utilization
-    if [ "$GPU_MEM_TOTAL" -gt 0 ]; then
-        GPU_MEM_UTIL=$(echo "scale=2; $GPU_MEM_USED / $GPU_MEM_TOTAL * 100" | bc)
-    else
-        GPU_MEM_UTIL=0
+    GPU_DATA=$(nvidia-smi --query-gpu=utilization.gpu,utilization.memory,temperature.gpu,memory.total,memory.used --format=csv,noheader,nounits 2>/dev/null | tr -d ' ')
+    if [ $? -eq 0 ] && [ -n "$GPU_DATA" ]; then
+        GPU_UTIL=$(echo $GPU_DATA | cut -d',' -f1)
+        GPU_TEMP=$(echo $GPU_DATA | cut -d',' -f3)
+        GPU_MEM_TOTAL=$(echo $GPU_DATA | cut -d',' -f4)
+        GPU_MEM_USED=$(echo $GPU_DATA | cut -d',' -f5)
+        
+        # Verify if GPU_MEM_TOTAL is a number
+        if [[ "$GPU_MEM_TOTAL" =~ ^[0-9]+$ ]] && [ "$GPU_MEM_TOTAL" -gt 0 ]; then
+            GPU_MEM_UTIL=$(echo "scale=2; $GPU_MEM_USED / $GPU_MEM_TOTAL * 100" | bc)
+        else
+            GPU_MEM_UTIL=0
+            GPU_MEM_TOTAL=0
+            GPU_MEM_USED=0
+        fi
+        
+        # Additional safety check for other variables
+        [[ ! "$GPU_UTIL" =~ ^[0-9]+$ ]] && GPU_UTIL=0
+        [[ ! "$GPU_TEMP" =~ ^[0-9]+$ ]] && GPU_TEMP=0
     fi
-else
-    GPU_UTIL=0
-    GPU_MEM_UTIL=0
-    GPU_TEMP=0
-    GPU_MEM_TOTAL=0
-    GPU_MEM_USED=0
 fi
 
 # --- CPU TEMP ---
