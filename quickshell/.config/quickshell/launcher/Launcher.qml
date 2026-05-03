@@ -67,18 +67,33 @@ PanelWindow {
 
     function close() { Qt.quit(); }
     
-    function runSelected() {
+    function runSelected(asSudo = false) {
         if (results.length > 0 && currentIndex < results.length) {
             let item = results[currentIndex];
             if (item.path) {
                 if (item.type === "app") {
-                    Quickshell.execDetached(["bash", "-c", "grep '^Exec=' " + item.path + " | head -1 | cut -d'=' -f2 | sed 's/%[fFuU]//g' | bash &"]);
+                    let cmd = "grep '^Exec=' '" + item.path + "' | head -1 | cut -d'=' -f2- | sed 's/%[fFuUnNdDeEiIkKmM]//g'";
+                    if (asSudo) {
+                        Quickshell.execDetached(["kitty", "sudo", "bash", "-c", "$(" + cmd + ")"]);
+                    } else {
+                        Quickshell.execDetached(["bash", "-c", cmd + " | bash &"]);
+                    }
                 } else if (item.type === "web") {
                     Quickshell.execDetached(["xdg-open", "https://www.google.com/search?q=" + encodeURIComponent(item.path)]);
-                } else if (item.type === "term") {
-                    Quickshell.execDetached(["kitty", "--hold", "sh", "-c", item.path]);
-                } else {
+                } else if (item.type === "url") {
                     Quickshell.execDetached(["xdg-open", item.path]);
+                } else if (item.type === "term") {
+                    let cmd = item.path;
+                    if (asSudo) cmd = "sudo " + cmd;
+                    Quickshell.execDetached(["kitty", "--hold", "sh", "-c", cmd]);
+                } else if (item.type === "emoji" || item.type === "calc") {
+                    Quickshell.execDetached(["bash", "-c", "echo -n '" + item.path + "' | wl-copy"]);
+                } else {
+                    if (asSudo) {
+                        Quickshell.execDetached(["kitty", "sudo", "xdg-open", item.path]);
+                    } else {
+                        Quickshell.execDetached(["xdg-open", item.path]);
+                    }
                 }
                 close();
             }
@@ -88,6 +103,18 @@ PanelWindow {
     function copyPath() {
         if (results.length > 0 && currentIndex < results.length) {
             Quickshell.execDetached(["bash", "-c", "echo -n '" + results[currentIndex].path + "' | wl-copy"]);
+        }
+    }
+
+    function openTerminal() {
+        if (results.length > 0 && currentIndex < results.length) {
+            let item = results[currentIndex];
+            let dir = item.path;
+            if (item.type !== "dir") {
+                dir = dir.substring(0, dir.lastIndexOf('/'));
+            }
+            Quickshell.execDetached(["kitty", "--directory", dir]);
+            close();
         }
     }
 
@@ -125,16 +152,12 @@ PanelWindow {
         id: mainContainer
         width: 700
         
-        // Dynamic height calculation:
-        // 80 (base/search bar) + (results count * 50px per item) + (10px margin if results exist)
-        // Max height capped at 550
         height: {
             if (results.length === 0) return 80;
             let targetHeight = 80 + (results.length * 50) + 20;
             return Math.min(targetHeight, 550);
         }
         
-        // Positioning in the upper half
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: parent.height / 5
@@ -182,14 +205,23 @@ PanelWindow {
                         if (event.key === Qt.Key_Escape) root.close();
                         if (event.key === Qt.Key_Down) root.currentIndex = Math.min(root.results.length - 1, root.currentIndex + 1);
                         if (event.key === Qt.Key_Up) root.currentIndex = Math.max(0, root.currentIndex - 1);
-                        if (event.key === Qt.Key_Return) root.runSelected();
-                        if (event.key === Qt.Key_Space) root.showPreview = !root.showPreview;
+                        
+                        if (event.key === Qt.Key_Return) {
+                            if (event.modifiers & Qt.ControlModifier && event.modifiers & Qt.ShiftModifier) {
+                                root.runSelected(true);
+                            } else if (event.modifiers & Qt.ControlModifier) {
+                                root.openTerminal();
+                            } else {
+                                root.runSelected(false);
+                            }
+                        }
+                        
+                        if (event.key === Qt.Key_Space && event.modifiers === Qt.NoModifier) root.showPreview = !root.showPreview;
                         if (event.key === Qt.Key_C && event.modifiers & Qt.ControlModifier) root.copyPath();
                     }
                 }
             }
 
-            // Results Area - Fills remaining space
             RowLayout {
                 id: resultsArea
                 anchors.top: searchBarRow.bottom
@@ -222,12 +254,25 @@ PanelWindow {
                             Loader {
                                 Layout.preferredWidth: 32
                                 Layout.preferredHeight: 32
-                                sourceComponent: (modelData.type === "app" || modelData.type === "web" || modelData.type === "term") && modelData.icon ? appIcon : fontIcon
+                                sourceComponent: {
+                                    if (modelData.type === "emoji") return emojiIcon;
+                                    if (modelData.icon && (modelData.type === "app" || modelData.type === "web" || modelData.type === "term" || modelData.type === "calc")) return appIcon;
+                                    return fontIcon;
+                                }
+
+                                Component {
+                                    id: emojiIcon
+                                    Text {
+                                        text: modelData.icon
+                                        font.pixelSize: 24
+                                        anchors.centerIn: parent
+                                    }
+                                }
 
                                 Component {
                                     id: appIcon
                                     Image {
-                                        source: "image://icon/" + modelData.icon
+                                        source: modelData.icon.startsWith("/") ? "file://" + modelData.icon : "image://icon/" + modelData.icon
                                         width: 32
                                         height: 32
                                         fillMode: Image.PreserveAspectFit
@@ -239,8 +284,8 @@ PanelWindow {
                                     Text {
                                         text: {
                                             if (modelData.type === "content") return "󰈙";
-                                            if (modelData.mime.startsWith("image/")) return "󰋩";
-                                            if (modelData.mime.startsWith("video/")) return "󰈫";
+                                            if (modelData.mime && modelData.mime.startsWith("image/")) return "󰋩";
+                                            if (modelData.mime && modelData.mime.startsWith("video/")) return "󰈫";
                                             return "󰈔";
                                         }
                                         color: index === root.currentIndex ? root.theme.primary : root.theme.subtext0

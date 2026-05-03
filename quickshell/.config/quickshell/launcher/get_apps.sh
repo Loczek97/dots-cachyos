@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
 # get_apps.sh - Reliable app lister using jq for safe JSON construction
-search_dirs=(
-    "$HOME/.local/share/applications"
-    "/usr/share/applications"
-    "/usr/local/share/applications"
-)
+IFS=':' read -ra ADDR <<< "$XDG_DATA_DIRS"
+search_dirs=()
+for i in "${ADDR[@]}"; do
+    search_dirs+=("$i/applications")
+done
+
+# Add local share if not already included
+local_apps="$HOME/.local/share/applications"
+if [[ ! " ${search_dirs[*]} " =~ " ${local_apps} " ]]; then
+    search_dirs+=("$local_apps")
+fi
 
 tmp_file=$(mktemp)
 

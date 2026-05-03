@@ -4,11 +4,65 @@ QUERY="$1"
 SEARCH_DIR="${2:-$HOME}"
 LIMIT=20
 
-if [[ -z "$QUERY" ]]; then
+CLEAN_QUERY=$(echo "$QUERY" | xargs)
+
+# --- 0. EMPTY STATE (Recent Files) ---
+if [[ -z "$CLEAN_QUERY" ]]; then
+    echo "["
+    FIRST=true
+    # Get 10 most recently modified files in $HOME (excluding hidden dirs)
+    while IFS= read -r line; do
+        [[ "$FIRST" == false ]] && echo ","
+        NAME=$(basename "$line")
+        MIME=$(xdg-mime query filetype "$line")
+        jq -c -n --arg path "$line" --arg name "Ostatnie: $NAME" --arg mime "$MIME" --arg type "file" \
+            '{path: $path, name: $name, mime: $mime, type: $type}'
+        FIRST=false
+    done < <(fd --type f --hidden --exclude .git --exclude .cache --max-results 10 --changed-within 1day . "$HOME" 2>/dev/null)
+    echo "]"
     exit 0
 fi
 
-CLEAN_QUERY=$(echo "$QUERY" | xargs)
+# --- 0.1 Command Palette Modes ---
+if [[ "$CLEAN_QUERY" =~ ^([a-z:]+)\ (.*) ]] || [[ "$CLEAN_QUERY" =~ ^(:e)$ ]]; then
+    MODE="${BASH_REMATCH[1]}"
+    VAL="${BASH_REMATCH[2]}"
+    
+    case "$MODE" in
+        :e)
+            echo "["
+            FIRST_E=true
+            EMOJI_FILE="/usr/share/unicode/emoji/emoji-test.txt"
+            
+            # Dynamic search through system emoji database
+            # 1. Filter fully-qualified emojis
+            # 2. Filter by user query ($VAL)
+            # 3. Limit to 50 results for speed
+            # 4. Parse into ICON|NAME format
+            grep "fully-qualified" "$EMOJI_FILE" | grep -v "^#" | grep -i "$VAL" | head -n 50 | \
+            sed -E 's/^.*# ([^ ]+) E[0-9.]+ (.*)$/\1|\2/' | \
+            while IFS="|" read -r E_ICON E_NAME; do
+                [[ "$FIRST_E" == false ]] && echo ","
+                jq -c -n --arg name "$E_ICON $E_NAME" --arg path "$E_ICON" --arg type "emoji" --arg icon "$E_ICON" \
+                    '{name: $name, path: $path, type: $type, icon: $icon}'
+                FIRST_E=false
+            done
+            echo "]"
+            exit 0
+            ;;
+    esac
+fi
+
+# Get Application Paths from XDG
+IFS=':' read -ra ADDR <<< "$XDG_DATA_DIRS"
+APP_PATHS=()
+for i in "${ADDR[@]}"; do
+    [[ -d "$i/applications" ]] && APP_PATHS+=("$i/applications")
+done
+local_apps="$HOME/.local/share/applications"
+if [[ -d "$local_apps" ]] && [[ ! " ${APP_PATHS[*]} " =~ " ${local_apps} " ]]; then
+    APP_PATHS+=("$local_apps")
+fi
 
 # Get Default Browser Info
 DEFAULT_BROWSER_HANDLER=$(xdg-settings get default-web-browser 2>/dev/null || xdg-mime query default text/html)
@@ -17,7 +71,7 @@ BROWSER_ICON="internet-web-browser"
 BROWSER_DESKTOP=""
 
 if [[ -n "$DEFAULT_BROWSER_HANDLER" ]]; then
-    for dir in "/usr/share/applications" "$HOME/.local/share/applications" "/usr/local/share/applications"; do
+    for dir in "${APP_PATHS[@]}"; do
         if [[ -f "$dir/$DEFAULT_BROWSER_HANDLER" ]]; then
             BROWSER_DESKTOP="$dir/$DEFAULT_BROWSER_HANDLER"
             break
@@ -37,9 +91,18 @@ fi
 echo "["
 FIRST=true
 
+# --- 0.2 Calculator ---
+if [[ "$CLEAN_QUERY" =~ ^[0-9+*/().^[:space:][:digit:]-]+$ ]] && [[ "$CLEAN_QUERY" =~ [0-9] ]] && [[ "$CLEAN_QUERY" =~ [+*/^] ]]; then
+    CALC_RES=$(python3 -c "import math; print(eval('$CLEAN_QUERY'))" 2>/dev/null)
+    if [[ -n "$CALC_RES" ]]; then
+        jq -c -n --arg name "Wynik: $CALC_RES" --arg path "$CALC_RES" --arg type "calc" --arg icon "accessories-calculator" \
+            '{name: $name, path: $path, type: $type, icon: $icon}'
+        FIRST=false
+    fi
+fi
+
 # --- 1. Applications ---
 if [[ ! "$QUERY" =~ (ext:|dir:) ]]; then
-    APP_PATHS=("/usr/share/applications" "$HOME/.local/share/applications")
     while IFS= read -r line; do
         [[ "$FIRST" == false ]] && echo ","
         NAME=$(grep -m1 "^Name=" "$line" | cut -d'=' -f2-)

@@ -26,7 +26,18 @@ list_apps() {
     local mime=$1
     if [ -z "$mime" ]; then echo "[]"; return; fi
     
-    find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -name "*.desktop" 2>/dev/null | while read -r path; do
+    # Get Application Paths from XDG
+    IFS=':' read -ra ADDR <<< "$XDG_DATA_DIRS"
+    search_dirs=()
+    for i in "${ADDR[@]}"; do
+        [[ -d "$i/applications" ]] && search_dirs+=("$i/applications")
+    done
+    local_apps="$HOME/.local/share/applications"
+    if [[ -d "$local_apps" ]] && [[ ! " ${search_dirs[*]} " =~ " ${local_apps} " ]]; then
+        search_dirs+=("$local_apps")
+    fi
+    
+    find "${search_dirs[@]}" -name "*.desktop" 2>/dev/null | while read -r path; do
         app=$(basename "$path")
         name=$(grep -m1 "^Name=" "$path" | cut -d= -f2-)
         icon=$(grep -m1 "^Icon=" "$path" | cut -d= -f2-)

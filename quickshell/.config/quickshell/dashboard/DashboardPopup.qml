@@ -1,13 +1,36 @@
 import "."
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Effects
-import QtQuick.Layouts 1.15
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 
-FloatingWindow {
+PanelWindow {
     id: powermenuWindow
+
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "dashboard"
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    
+    exclusionMode: ExclusionMode.Ignore
+    
+    anchors {
+        top: true
+        bottom: true
+        left: true
+        right: true
+    }
+
+    margins {
+        top: 0
+        bottom: 0
+        left: 0
+        right: 0
+    }
+
+    color: "transparent"
 
     property QtObject theme: themeLoader.item ? themeLoader.item : dummyTheme
     // -------------------------------------------------------------------------
@@ -37,9 +60,9 @@ FloatingWindow {
     property string hostName: "linux"
     property string facePath: "file://" + Quickshell.env("HOME") + "/.face"
     property var musicData: {
-        "title": "Nie odtwarza",
-        "artist": "Nie odtwarza",
-        "status": "Zatrzymany",
+        "title": "Brak",
+        "artist": "Brak",
+        "status": "Zatrzymano",
         "percent": 0,
         "lengthStr": "00:00",
         "positionStr": "00:00",
@@ -52,11 +75,6 @@ FloatingWindow {
     function execCmd(cmdStr) {
         Quickshell.execDetached(["bash", "-c", cmdStr]);
     }
-
-    title: "dashboard_win"
-    width: screen.width
-    height: screen.height
-    color: "transparent"
 
     Loader {
         id: themeLoader

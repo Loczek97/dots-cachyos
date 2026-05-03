@@ -176,9 +176,9 @@ else
     --arg red "$DEF_RED" \
     --arg text "$DEF_TEXT" \
     '{
-        title: "Not Playing",
-        artist: "",
-        status: "Stopped",
+        title: "Brak",
+        artist: "Brak",
+        status: "Zatrzymano",
         percent: 0,
         lengthStr: "00:00",
         positionStr: "00:00",
@@ -189,7 +189,7 @@ else
         grad: ("linear-gradient(45deg, " + $mauve + ", " + $blue + ", " + $red + ", " + $mauve + ")"),
         textColor: $text,
         deviceIcon: "󰓃",
-        deviceName: "Speaker",
+        deviceName: "Głośnik",
         artUrl: $placeholder
     }'
 fi
