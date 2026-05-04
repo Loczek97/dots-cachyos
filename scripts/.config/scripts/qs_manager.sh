@@ -13,7 +13,7 @@ if [ -f "$LOCK_FILE" ]; then
   LAST_CALL=$(cat "$LOCK_FILE")
   CUR_TIME=$(date +%s%3N)
   DIFF=$((CUR_TIME - LAST_CALL))
-  if [ $DIFF -lt 500 ]; then
+  if [ $DIFF -ge 0 ] && [ $DIFF -lt 500 ]; then
     echo "Debounce: Ignoring double-call for $TARGET (diff: ${DIFF}ms)" >>"$LOG_FILE"
     exit 0
   fi
