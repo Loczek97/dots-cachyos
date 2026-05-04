@@ -29,6 +29,19 @@ PanelWindow {
     property string btStatus: "Off"
     property string btIcon: "󰂲"
     property string btDevice: ""
+    property bool isDesktop: false
+    
+    Process {
+        id: chassisDetector
+        running: true
+        command: ["bash", "-c", "if ls /sys/class/power_supply/BAT* 1> /dev/null 2>&1; then echo 'laptop'; else echo 'desktop'; fi"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                barWindow.isDesktop = (this.text.trim() === "desktop");
+            }
+        }
+    }
+    
     property string volPercent: "0%"
     property string volIcon: "󰕾"
     property bool isMuted: false
@@ -1505,6 +1518,48 @@ PanelWindow {
 
                         }
 
+                    }
+
+                    Rectangle {
+                        property bool isHovered: newBatMouse.containsMouse
+                        property real targetWidth: newBatLayoutRow.implicitWidth + 24
+
+                        visible: !barWindow.isDesktop
+                        color: isHovered ? theme.surface2 : theme.surface1
+                        radius: 10
+                        Layout.preferredHeight: sysLayout.pillHeight
+                        Layout.preferredWidth: visible ? targetWidth : 0
+                        scale: isHovered ? 1.05 : 1
+
+                        RowLayout {
+                            id: newBatLayoutRow
+                            anchors.centerIn: parent
+                            spacing: 8
+                            Text {
+                                text: barWindow.batIcon
+                                font.family: "CaskaydiaCoveNerdFont-Regular"
+                                font.pixelSize: 16
+                                color: theme.peach
+                            }
+                            Text {
+                                text: barWindow.batPercent
+                                font.family: "CaskaydiaCoveNerdFont-Regular"
+                                font.pixelSize: 13
+                                font.weight: Font.Black
+                                color: theme.text
+                            }
+                        }
+
+                        MouseArea {
+                            id: newBatMouse
+                            hoverEnabled: true
+                            anchors.fill: parent
+                            onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/scripts/qs_manager.sh toggle battery"])
+                        }
+
+                        Behavior on targetWidth { NumberAnimation { duration: 300; easing.type: Easing.OutExpo } }
+                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                        Behavior on color { ColorAnimation { duration: 200 } }
                     }
 
                     Rectangle {

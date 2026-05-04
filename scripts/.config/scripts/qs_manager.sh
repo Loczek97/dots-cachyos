@@ -63,7 +63,9 @@ fi
 # PREP FUNCTIONS
 # -----------------------------------------------------------------------------
 handle_wallpaper_prep() {
+  MARKER_DIR="$HOME/.cache/wallpaper_picker/colors_markers"
   mkdir -p "$THUMB_DIR"
+  mkdir -p "$MARKER_DIR"
   (
     for thumb in "$THUMB_DIR"/*; do
       [ -e "$thumb" ] || continue
@@ -71,6 +73,7 @@ handle_wallpaper_prep() {
       clean_name="${filename#000_}"
       if [ ! -f "$SRC_DIR/$clean_name" ]; then
         rm -f "$thumb"
+        rm -f "$MARKER_DIR/${filename}_HEX_"*
       fi
     done
 
@@ -85,10 +88,26 @@ handle_wallpaper_prep() {
         if [ ! -f "$thumb" ]; then
           ffmpeg -y -ss 00:00:05 -i "$img" -vframes 1 -f image2 -q:v 2 "$thumb" >/dev/null 2>&1
         fi
+        
+        # Color marker for video (using thumbnail)
+        if [ -f "$thumb" ] && [[ -z $(ls "$MARKER_DIR/000_${filename}_HEX_"* 2>/dev/null) ]]; then
+          hex=$(magick "$thumb" -scale 1x1\! -alpha off -format "%[hex:p{0,0}]" info: 2>/dev/null | grep -oE '[0-9A-Fa-f]{6}' | head -n 1)
+          if [ -n "$hex" ]; then
+            touch "$MARKER_DIR/000_${filename}_HEX_${hex}"
+          fi
+        fi
       else
         thumb="$THUMB_DIR/$filename"
         if [ ! -f "$thumb" ]; then
           magick "$img" -resize x420 -quality 70 "$thumb"
+        fi
+
+        # Color marker for image
+        if [ -f "$thumb" ] && [[ -z $(ls "$MARKER_DIR/${filename}_HEX_"* 2>/dev/null) ]]; then
+          hex=$(magick "$thumb" -scale 1x1\! -alpha off -format "%[hex:p{0,0}]" info: 2>/dev/null | grep -oE '[0-9A-Fa-f]{6}' | head -n 1)
+          if [ -n "$hex" ]; then
+            touch "$MARKER_DIR/${filename}_HEX_${hex}"
+          fi
         fi
       fi
     done
