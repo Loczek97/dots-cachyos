@@ -181,17 +181,34 @@ PanelWindow {
                                 color: _theme.base
 
                                 Image {
+                                    id: centerIconImage
+
+                                    function resolveSource(path) {
+                                        if (!path) return "";
+                                        
+                                        if (path.startsWith("image://") || path.startsWith("file://") || path.startsWith("/"))
+                                            return path.startsWith("/") ? "file://" + path : path;
+
+                                        let name = path.replace("image://icon/", "").replace("image://desktop-icon/", "");
+                                        let normName = name.toLowerCase().replace(/\s+/g, "-");
+                                        
+                                        return "image://icon/" + normName;
+                                    }
+
                                     anchors.fill: parent
                                     anchors.margins: 4
-                                    source: {
-                                        let p = model.iconPath || "";
-                                        if (p === "")
-                                            return "";
-
-                                        if (p.startsWith("image://") || p.startsWith("file://") || p.startsWith("/"))
-                                            return p;
-
-                                        return "image://icon/" + p;
+                                    source: resolveSource(model.iconPath || "")
+                                    onStatusChanged: {
+                                        if (status === Image.Error) {
+                                            let path = model.iconPath || "";
+                                            let name = path.replace("image://icon/", "").replace("image://desktop-icon/", "");
+                                            let normName = name.toLowerCase().replace(/\s+/g, "-");
+                                            let baseName = normName.replace(/-(canary|ptb|bin|git|flatpak|snap)$/, "");
+                                            
+                                            if (source.toString() !== "image://icon/" + baseName) {
+                                                source = "image://icon/" + baseName;
+                                            }
+                                        }
                                     }
                                     fillMode: Image.PreserveAspectFit
                                 }

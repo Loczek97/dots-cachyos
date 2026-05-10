@@ -94,6 +94,20 @@ PanelWindow {
         interactive: false
         clip: false
 
+        add: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1.0; duration: 300; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "x"; from: 100; to: 0; duration: 300; easing.type: Easing.OutCubic }
+        }
+
+        remove: Transition {
+            NumberAnimation { property: "opacity"; to: 0; duration: 200 }
+            NumberAnimation { property: "scale"; to: 0.9; duration: 200 }
+        }
+
+        displaced: Transition {
+            NumberAnimation { properties: "y"; duration: 300; easing.type: Easing.OutBack; easing.amplitude: 0.5 }
+        }
+
         delegate: Item {
             id: delegateRoot
 
@@ -225,31 +239,38 @@ PanelWindow {
                         Image {
                             id: iconImage
 
-                            function resolveSource(path, retry) {
-                                if (!path)
-                                    return "";
-
+                            function resolveSource(path) {
+                                if (!path) return "";
                                 if (path.startsWith("/") || path.startsWith("file://"))
                                     return path.startsWith("/") ? "file://" + path : path;
 
                                 let name = path.replace("image://icon/", "").replace("image://desktop-icon/", "");
-                                if (retry === 1 && name.includes("battery"))
-                                    name = "battery-000";
+                                let normName = name.toLowerCase().replace(/\s+/g, "-");
+                                let baseName = normName.replace(/-(canary|ptb|bin|git|flatpak|snap)$/, "");
 
-                                return "image://icon/" + name;
+                                // Quickshell's image://icon/ provider is great, but we can't easily check if an icon exists.
+                                // So we return the most likely candidate, with a backup in the UI.
+                                return "image://icon/" + normName;
                             }
 
                             anchors.fill: parent
                             anchors.margins: 6
-                            source: resolveSource(model.iconPath, 0)
+                            source: resolveSource(model.iconPath)
+                            onStatusChanged: {
+                                if (status === Image.Error) {
+                                    let path = model.iconPath;
+                                    let name = path.replace("image://icon/", "").replace("image://desktop-icon/", "");
+                                    let normName = name.toLowerCase().replace(/\s+/g, "-");
+                                    let baseName = normName.replace(/-(canary|ptb|bin|git|flatpak|snap)$/, "");
+                                    
+                                    if (source.toString() !== "image://icon/" + baseName) {
+                                        source = "image://icon/" + baseName;
+                                    }
+                                }
+                            }
                             sourceSize: Qt.size(64, 64)
                             fillMode: Image.PreserveAspectFit
                             smooth: true
-                            onStatusChanged: {
-                                if (status === Image.Error && model.iconPath.includes("battery"))
-                                    source = resolveSource(model.iconPath, 1);
-
-                            }
                         }
 
                         Text {

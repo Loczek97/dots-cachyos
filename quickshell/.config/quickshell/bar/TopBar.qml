@@ -150,6 +150,9 @@ PanelWindow {
                 icon = n.image.toString();
             else if (n.appIcon && n.appIcon !== "")
                 icon = n.appIcon;
+            else if (n.appName && n.appName !== "")
+                icon = n.appName;
+
             let notifData = {
                 "appName": n.appName || "System",
                 "summary": n.summary || "No Title",
