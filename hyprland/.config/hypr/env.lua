@@ -1,0 +1,7 @@
+hl.env("XCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.env("QT_WAYLAND_FORCE_DPI", "96")
+hl.env("QT_SCALE_FACTOR_ROUNDING_POLICY", "PassThrough")
+hl.env("QT_SCREEN_SCALE_FACTORS", "1;1")
