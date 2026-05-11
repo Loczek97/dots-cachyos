@@ -1,19 +1,16 @@
-local function set(cat, key, val)
-    hl.config({ [cat] = { [key] = val } })
-end
-
-set("input", "kb_layout", "pl")
-set("input", "kb_variant", "")
-set("input", "kb_model", "")
-set("input", "kb_options", "")
-set("input", "kb_rules", "")
-
-set("input", "follow_mouse", 1)
-
-set("input", "touchpad", {
-    natural_scroll = true,
-    tap_to_click = true,
-    tap_and_drag = true
+hl.config({
+    input = {
+        kb_layout = "pl",
+        kb_variant = "",
+        kb_model = "",
+        kb_options = "",
+        kb_rules = "",
+        follow_mouse = 1,
+        touchpad = {
+            natural_scroll = true,
+            tap_to_click = true,
+            tap_and_drag = true
+        },
+        sensitivity = 0
+    }
 })
-
-set("input", "sensitivity", 0)

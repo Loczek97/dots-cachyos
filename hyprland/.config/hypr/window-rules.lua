@@ -1,7 +1,3 @@
-local function hex_to_rgba(hex, alpha)
-    return "rgba(" .. hex:sub(3) .. (alpha or "ff") .. ")"
-end
-
 -- ─────────────────────────────
 -- Global rules
 -- ─────────────────────────────
@@ -127,6 +123,16 @@ hl.layer_rule({ match = { namespace = "dashboard" }, no_anim = true })
 
 -- ───────── Jetbrains IDEs ─────────
 hl.window_rule({ match = { class = "jetbrains-.*" }, no_initial_focus = true, no_anim = true })
+
+-- ───────── Jetbrains Toolbox App ─────────
+hl.window_rule({
+    match = { class = "jetbrains-toolbox" },
+    float = true,
+    pin = true,
+    size = { 430, 670 },
+    move = { "1480", "260" },
+    no_anim = true
+})
 
 -- ───────── Launcher (Spotlight) ─────────
 hl.window_rule({

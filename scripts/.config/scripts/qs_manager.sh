@@ -43,17 +43,21 @@ if [[ "$ACTION" =~ ^[0-9]+$ ]]; then
   MOVE_OPT="$2"
 
   if [[ "$MOVE_OPT" == "move" ]]; then
-    hyprctl dispatch movetoworkspace "$WORKSPACE_NUM"
+    hyprctl dispatch "hl.dsp.window.move({ workspace = '$WORKSPACE_NUM' })"
   else
-    hyprctl dispatch workspace "$WORKSPACE_NUM"
+    hyprctl dispatch "hl.dsp.focus({ workspace = '$WORKSPACE_NUM' })"
   fi
 
   TARGET_ADDR=$(hyprctl clients -j | jq -r ".[] | select(.workspace.id == $WORKSPACE_NUM and (.class | contains(\"qs-master\") | not) and (.title | contains(\"qs-master\") | not)) | .address" | head -n 1)
 
   if [[ -n "$TARGET_ADDR" && "$TARGET_ADDR" != "null" ]]; then
-    hyprctl --batch "keyword cursor:no_warps true ; dispatch focuswindow address:$TARGET_ADDR ; keyword cursor:no_warps false"
+    hyprctl eval "hl.config({ cursor = { no_warps = true } })"
+    hyprctl dispatch "hl.dsp.focus({ window = '$TARGET_ADDR' })"
+    hyprctl eval "hl.config({ cursor = { no_warps = false } })"
   else
-    hyprctl --batch "keyword cursor:no_warps true ; dispatch focuswindow qs-master ; keyword cursor:no_warps false"
+    hyprctl eval "hl.config({ cursor = { no_warps = true } })"
+    hyprctl dispatch "hl.dsp.focus({ window = 'qs-master' })"
+    hyprctl eval "hl.config({ cursor = { no_warps = false } })"
   fi
 
   exit 0

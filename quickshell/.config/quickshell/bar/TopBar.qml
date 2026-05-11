@@ -536,7 +536,10 @@ PanelWindow {
 
                                 hoverEnabled: true
                                 anchors.fill: parent
-                                onClicked: Quickshell.execDetached(["hyprctl", "dispatch", "workspace", modelData.id.toString()])
+                                onClicked: (mouse) => {
+                                    mouse.accepted = true;
+                                    Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.focus({ workspace = '" + modelData.id.toString() + "' })"]);
+                                }
                             }
 
                             Behavior on targetWidth {

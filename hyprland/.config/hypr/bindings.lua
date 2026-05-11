@@ -35,7 +35,7 @@ hl.bind(mainMod .. " + " .. shift .. " + W", hl.dsp.exec_cmd("~/.config/scripts/
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("~/.config/scripts/qs_manager.sh toggle taskmanager"))
 
 -- scrolloverview
-hl.bind(mainMod .. " + Tab", hl.dsp.exec_raw("scrolloverview:overview, toggle"))
+hl.bind(mainMod .. " + Tab", hl.dsp.exec_raw("scrolloverview:overview,toggle"))
 
 -- Move focus
 local directions = {
@@ -62,8 +62,8 @@ end
 for i = 1, 10 do
     local key = tostring(i % 10)
     hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ workspace = tostring(i) }))
-    -- Use exec_raw for move_to_workspace as it seems to be missing from dsp.window
-    hl.bind(mainMod .. " + " .. shift .. " + " .. key, hl.dsp.exec_raw("movetoworkspace " .. i))
+    -- Use hl.dsp.window.move for move_to_workspace
+    hl.bind(mainMod .. " + " .. shift .. " + " .. key, hl.dsp.window.move({ workspace = tostring(i) }))
 end
 
 -- Special workspace
