@@ -117,9 +117,6 @@ hl.layer_rule({ match = { namespace = "qs-popups" }, no_anim = true })
 
 -- ───────── Launcher layer ─────────
 hl.layer_rule({ match = { namespace = "launcher" } })
--- ───────── Dashboard layer ─────────
-hl.layer_rule({ match = "dashboard", no_anim = true })
-hl.layer_rule({ match = { namespace = "dashboard" }, no_anim = true })
 
 -- ───────── Jetbrains IDEs ─────────
 hl.window_rule({ match = { class = "jetbrains-.*" }, no_initial_focus = true, no_anim = true })
@@ -132,15 +129,4 @@ hl.window_rule({
     size = { 430, 670 },
     move = { "1480", "260" },
     no_anim = true
-})
-
--- ───────── Launcher (Spotlight) ─────────
-hl.window_rule({
-    match = { title = "launcher_win" },
-    float = true,
-    center = true,
-    size = { 800, 500 },
-    opacity =
-    "1.0 override",
-    rounding = 20
 })

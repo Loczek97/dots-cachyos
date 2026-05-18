@@ -1,4 +1,5 @@
 hl.on("hyprland.start", function()
+    hl.exec_cmd("hyprctl dispatch focusmonitor DP-3")
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("hyprpm reload -n")
     hl.exec_cmd("awww-daemon & hypridle & ~/dotfiles/hyprland/.config/hypr/xdg.sh")
