@@ -39,31 +39,31 @@ hl.bind(mainMod .. " + Tab", hl.dsp.exec_raw("scrolloverview:overview,toggle"))
 
 -- Move focus
 local directions = {
-    h = "l",
-    l = "r",
-    k = "u",
-    j = "d",
-    Left = "l",
-    Right = "r",
-    Up = "u",
-    Down = "d"
+	h = "l",
+	l = "r",
+	k = "u",
+	j = "d",
+	Left = "l",
+	Right = "r",
+	Up = "u",
+	Down = "d",
 }
 for key, dir in pairs(directions) do
-    hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ direction = dir }))
+	hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ direction = dir }))
 end
 
 -- Swap windows
 local arrows = { Left = "l", Right = "r", Up = "u", Down = "d" }
 for key, dir in pairs(arrows) do
-    hl.bind(mainMod .. " + " .. shift .. " + " .. key, hl.dsp.window.swap({ direction = dir }))
+	hl.bind(mainMod .. " + " .. shift .. " + " .. key, hl.dsp.window.swap({ direction = dir }))
 end
 
 -- Switch workspaces
 for i = 1, 10 do
-    local key = tostring(i % 10)
-    hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ workspace = tostring(i) }))
-    -- Use hl.dsp.window.move for move_to_workspace
-    hl.bind(mainMod .. " + " .. shift .. " + " .. key, hl.dsp.window.move({ workspace = tostring(i) }))
+	local key = tostring(i % 10)
+	hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ workspace = tostring(i) }))
+	-- Use hl.dsp.window.move for move_to_workspace
+	hl.bind(mainMod .. " + " .. shift .. " + " .. key, hl.dsp.window.move({ workspace = tostring(i) }))
 end
 
 -- Special workspace

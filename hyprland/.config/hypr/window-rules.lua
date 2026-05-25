@@ -24,92 +24,113 @@ hl.layer_rule({ match = { namespace = "network_win" }, no_anim = true })
 hl.layer_rule({ match = { namespace = "hyprpicker" }, no_anim = true })
 
 -- ───────── Steam Games (General) ─────────
-hl.window_rule({ match = { class = "steam_app_.*" }, immediate = true, opacity = "1.0 override", no_blur = true, fullscreen = true })
+hl.window_rule({
+	match = { class = "steam_app_.*" },
+	immediate = true,
+	opacity = "1.0 override",
+	no_blur = true,
+	fullscreen = true,
+})
 
 -- ───────── Gamescope ─────────
-hl.window_rule({ match = { class = "gamescope" }, immediate = true, opacity = "0.5 override", no_blur = true, fullscreen = true })
+hl.window_rule({
+	match = { class = "gamescope" },
+	immediate = true,
+	opacity = "0.5 override",
+	no_blur = true,
+	fullscreen = true,
+})
 
 -- ───────── CS2 ─────────
-hl.window_rule({ match = { class = "cs2" }, immediate = true, keep_aspect_ratio = true, opacity = "1.0 override", no_blur = true })
+hl.window_rule({
+	match = { class = "cs2" },
+	immediate = true,
+	keep_aspect_ratio = true,
+	opacity = "1.0 override",
+	no_blur = true,
+})
 
 -- ───────── Wallpaper Picker ─────────
 hl.window_rule({
-    match = { title = "wallpaper-picker" },
-    float = true,
-    center = true,
-    size = { 1920, 500 },
-    opacity =
-    "1.0 override",
-    no_blur = true,
-    border_size = 0
+	match = { title = "wallpaper-picker" },
+	float = true,
+	center = true,
+	size = { 1920, 500 },
+	opacity = "1.0 override",
+	no_blur = true,
+	border_size = 0,
 })
 
 -- ───────── Battery Popup ─────────
 hl.window_rule({
-    match = { title = "battery-popup" },
-    float = true,
-    pin = true,
-    size = { 480, 760 },
-    move = { "100%-500", "70" },
-    opacity =
-    "1.0 override",
-    rounding = 20,
-    no_blur = true
+	match = { title = "battery-popup" },
+	float = true,
+	pin = true,
+	size = { 480, 760 },
+	move = { "100%-500", "70" },
+	opacity = "1.0 override",
+	rounding = 20,
+	no_blur = true,
 })
 
 -- ───────── Network Popup ─────────
 hl.window_rule({
-    match = { title = "network-popup" },
-    float = true,
-    pin = true,
-    size = { 900, 700 },
-    move = { "100%-920", "70" },
-    opacity =
-    "1.0 override",
-    rounding = 20,
-    no_blur = true
+	match = { title = "network-popup" },
+	float = true,
+	pin = true,
+	size = { 900, 700 },
+	move = { "100%-920", "70" },
+	opacity = "1.0 override",
+	rounding = 20,
+	no_blur = true,
 })
 
 -- ───────── Music Window ─────────
 hl.window_rule({
-    match = { title = "music_win" },
-    float = true,
-    pin = true,
-    size = { 700, 280 },
-    move = { "12", "70" },
-    opacity =
-    "1.0 override",
-    rounding = 20,
-    no_blur = true
+	match = { title = "music_win" },
+	float = true,
+	pin = true,
+	size = { 700, 280 },
+	move = { "12", "70" },
+	opacity = "1.0 override",
+	rounding = 20,
+	no_blur = true,
 })
 
 -- ───────── Calendar Window ─────────
 hl.window_rule({
-    match = { title = "calendar_win" },
-    float = true,
-    pin = true,
-    size = { 1300, 500 },
-    move = { "310", "70" },
-    opacity =
-    "1.0 override",
-    rounding = 20,
-    no_blur = true
+	match = { title = "calendar_win" },
+	float = true,
+	pin = true,
+	size = { 1300, 500 },
+	move = { "310", "70" },
+	opacity = "1.0 override",
+	rounding = 20,
+	no_blur = true,
 })
 
 -- ───────── Task manager ─────────
 hl.window_rule({
-    match = { title = "taskmanager_win" },
-    float = true,
-    pin = true,
-    size = { 900, 1000 },
-    opacity =
-    "1.0 override",
-    rounding = 20,
-    no_blur = true
+	match = { title = "taskmanager_win" },
+	float = true,
+	pin = true,
+	size = { 900, 1000 },
+	opacity = "1.0 override",
+	rounding = 20,
+	no_blur = true,
 })
 
 -- ───────── Mixer Popup ─────────
-hl.window_rule({ match = { title = "mixer_win" }, float = true, pin = true, size = { 650, 700 }, opacity = "1.0 override", rounding = 20, no_blur = true, move = { "1255", "70" } })
+hl.window_rule({
+	match = { title = "mixer_win" },
+	float = true,
+	pin = true,
+	size = { 650, 700 },
+	opacity = "1.0 override",
+	rounding = 20,
+	no_blur = true,
+	move = { "1255", "70" },
+})
 
 -- ───────── Notification widget ─────────
 hl.layer_rule({ match = { namespace = "qs-notification-center" }, no_anim = true, ignore_alpha = 0.1 })
@@ -123,10 +144,10 @@ hl.window_rule({ match = { class = "jetbrains-.*" }, no_initial_focus = true, no
 
 -- ───────── Jetbrains Toolbox App ─────────
 hl.window_rule({
-    match = { class = "jetbrains-toolbox" },
-    float = true,
-    pin = true,
-    size = { 430, 670 },
-    move = { "1480", "260" },
-    no_anim = true
+	match = { class = "jetbrains-toolbox" },
+	float = true,
+	pin = true,
+	size = { 430, 670 },
+	move = { "1480", "260" },
+	no_anim = true,
 })
