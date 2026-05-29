@@ -10,7 +10,11 @@ hl.window_rule({ match = { class = "Minecraft" }, no_blur = true, opacity = "1.0
 hl.window_rule({ match = { title = "Lunar Client.*" }, no_blur = true, opacity = "1.0 override" })
 hl.window_rule({ match = { class = "Better MC" }, no_blur = true, opacity = "1.0 override" })
 
-hl.window_rule({ match = { class = "discord-canary" }, opacity = 0.875 })
+hl.window_rule({
+	match = { class = "discord-canary" },
+	opacity = 0.875,
+	workspace = "5",
+})
 
 -- ─────────────────────────────
 -- Layer rules (OSD / overlays)
