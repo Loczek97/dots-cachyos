@@ -14,6 +14,7 @@ hl.window_rule({
 	match = { class = "discord-canary" },
 	opacity = 0.875,
 	workspace = "5",
+	no_initial_focus = true,
 })
 
 -- ─────────────────────────────
