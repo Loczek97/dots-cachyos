@@ -33,7 +33,7 @@ hl.config({
     },
 
     debug = {
-        vfr = false
+        vfr = true
     }
 })
 

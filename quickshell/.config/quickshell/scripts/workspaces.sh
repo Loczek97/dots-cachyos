@@ -2,12 +2,17 @@
 
 # Funkcja do wypisywania JSONa
 print_workspaces() {
-  spaces=$(hyprctl workspaces -j)
-  active=$(hyprctl activeworkspace -j | jq '.id')
-  SEQ_END=8
+  local spaces=$(hyprctl workspaces -j)
+  local active_json=$(hyprctl activeworkspace -j)
+  local active=1
+  if [[ "$active_json" =~ \"id\":[[:space:]]*([0-9]+) ]]; then
+    active="${BASH_REMATCH[1]}"
+  fi
+  local SEQ_END=8
 
-  echo "$spaces" | jq --argjson a "$active" --arg end "$SEQ_END" -c '
-        (map( { (.id|tostring): . } ) | add) as $s
+  jq --argjson a "$active" --arg end "$SEQ_END" -n -c \
+     --argjson spaces "$spaces" '
+        ($spaces | map( { (.id|tostring): . } ) | add) as $s
         |
         [range(1; ($end|tonumber) + 1)] | map(
             . as $i |

@@ -48,4 +48,12 @@ case "$1" in
             echo "#cdd6f4"
         fi
         ;;
+    --all)
+        ensure_data
+        if [ -f "$json_file" ]; then
+            jq -r '.forecast[0] | "\(.icon)\n\(if .max != null and .max != "null" then "\(.max)°C" else "" end)\n\(.hex // "#cdd6f4")"' "$json_file" 2>/dev/null || printf "\n\n#cdd6f4\n"
+        else
+            printf "\n\n#cdd6f4\n"
+        fi
+        ;;
 esac

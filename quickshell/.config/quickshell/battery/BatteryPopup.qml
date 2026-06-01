@@ -125,7 +125,7 @@ FloatingWindow {
 
     Process {
         id: batPoller
-        command: ["bash", "-c", "LC_ALL=C upower -i $(upower -e | grep battery | head -n1) | awk '/percentage:/ {p=$2} /state:/ {s=$2} /time to empty:/ {t=$4\"h \"$5} /time to full:/ {t=$4\"h \"$5} END {print p; print s; print (t?t:\"0h 0m\")}' ; powerprofilesctl get 2>/dev/null || echo 'balanced'"]
+        command: ["bash", "-c", "LC_ALL=C upower -i $(upower -e | grep -m1 battery) | awk '/percentage:/ {p=$2} /state:/ {s=$2} /time to empty:/ {t=$4\"h \"$5} /time to full:/ {t=$4\"h \"$5} END {print p; print s; print (t?t:\"0h 0m\")}' ; powerprofilesctl get 2>/dev/null || echo 'balanced'"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {

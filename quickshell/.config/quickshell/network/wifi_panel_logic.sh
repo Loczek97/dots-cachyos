@@ -104,15 +104,22 @@ NETWORKS_JSON=$(LC_ALL=C timeout 1 nmcli -t -f active,ssid,signal,security devic
                 requires_password="true"
             fi
         fi
-        jq -n \
-           --arg id "$ssid" \
-           --arg ssid "$ssid" \
-           --arg icon "$icon" \
-           --arg signal "$signal" \
-           --arg security "$security" \
-           --argjson requiresPassword "$requires_password" \
-           '{id: $id, ssid: $ssid, icon: $icon, signal: $signal, security: $security, requiresPassword: $requiresPassword}'
-    done | jq -s '.')
+        printf "%s\t%s\t%s\t%s\t%s\n" "$ssid" "$icon" "$signal" "$security" "$requires_password"
+    done | jq -R -s -c '
+      split("\n")
+      | map(
+          select(length > 0)
+          | split("\t")
+          | {
+              id: .[0],
+              ssid: .[0],
+              icon: .[1],
+              signal: .[2],
+              security: .[3],
+              requiresPassword: (.[4] == "true")
+            }
+        )
+    ')
 
 echo $(jq -n \
        --arg power "on" \

@@ -259,16 +259,7 @@ PanelWindow {
     Process {
         id: slowSysPoller
 
-        command: ["bash", "-c", `
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --wifi-status)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --wifi-icon)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --wifi-ssid)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --bt-status)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --bt-icon)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --bt-connected)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --battery-percent)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --battery-icon)"
-        `]
+        command: ["bash", "-c", "~/.config/quickshell/scripts/sys_info.sh --all-slow"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -289,7 +280,7 @@ PanelWindow {
     }
 
     Timer {
-        interval: 1000
+        interval: 5000
         running: true
         repeat: true
         triggeredOnStart: true
@@ -299,12 +290,7 @@ PanelWindow {
     Process {
         id: fastSysPoller
 
-        command: ["bash", "-c", `
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --volume)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --volume-icon)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --kb-layout)"
-            echo "$(~/.config/quickshell/scripts/sys_info.sh --is-muted)"
-        `]
+        command: ["bash", "-c", "~/.config/quickshell/scripts/sys_info.sh --all-fast"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -321,7 +307,7 @@ PanelWindow {
     }
 
     Timer {
-        interval: 150
+        interval: 500
         running: true
         repeat: true
         triggeredOnStart: true
@@ -331,11 +317,7 @@ PanelWindow {
     Process {
         id: weatherPoller
 
-        command: ["bash", "-c", `
-            echo "$(~/.config/scripts/weather.sh --icon)"
-            echo "$(~/.config/scripts/weather.sh --temp)"
-            echo "$(~/.config/scripts/weather.sh --hex)"
-        `]
+        command: ["bash", "-c", "~/.config/scripts/weather.sh --all"]
 
         stdout: StdioCollector {
             onStreamFinished: {

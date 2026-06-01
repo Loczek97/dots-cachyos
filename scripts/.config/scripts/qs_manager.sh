@@ -268,6 +268,13 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
       POPUP_PID="" # Clear it so we start a new one below
     elif [[ "$ACTION" == "toggle" ]]; then
       echo "Action: toggle -> Found legitimate PID $POPUP_PID. Killing it." >>"$LOG_FILE"
+      if [[ "$TARGET" == "network" ]]; then
+        if [ -f "$BT_PID_FILE" ]; then
+          kill $(cat "$BT_PID_FILE") 2>/dev/null
+          rm -f "$BT_PID_FILE"
+        fi
+        bluetoothctl scan off >/dev/null 2>&1
+      fi
       kill "$POPUP_PID" 2>/dev/null
       # If still alive after 0.5s, force kill
       (

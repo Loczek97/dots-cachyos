@@ -20,12 +20,13 @@ get_icon() {
 
 get_audio_profile() {
     local mac="$1"
-    local mac_us=$(echo "$mac" | tr ':' '_')
+    local mac_us="${mac//:/_}"
     local card="bluez_card.$mac_us"
     
-    if ! pactl list cards short 2>/dev/null | grep -q "$card"; then echo "Nieznany"; return; fi
+    local cards_info=$(pactl list cards 2>/dev/null)
+    if ! echo "$cards_info" | grep -q "$card"; then echo "Nieznany"; return; fi
 
-    local active=$(pactl list cards 2>/dev/null | awk -v c="$card" '$0~"Name: "c{f=1} f&&/^[\t ]*Active Profile:/{print $3; exit}')
+    local active=$(echo "$cards_info" | awk -v c="$card" '$0~"Name: "c{f=1} f&&/^[\t ]*Active Profile:/{print $3; exit}')
     
     if [[ -z "$active" || "$active" == "off" ]]; then echo "Brak"; return; fi
     
@@ -34,11 +35,6 @@ get_audio_profile() {
     if [[ "$active" == *"headset"* || "$active" == *"hfp"* ]]; then desc="Zestaw słuchawkowy (HFP)"; fi
     
     echo "$desc"
-}
-
-is_device_paired() {
-    local mac="$1"
-    bluetoothctl info "$mac" 2>/dev/null | grep -q "Paired: yes"
 }
 
 get_status() {
@@ -50,22 +46,25 @@ get_status() {
 
     if [ "$power" == "on" ]; then
         connected_mac=""
-        paired_list_objs=()
-        discovered_list_objs=()
 
         # Get connected device
         connected_info=$(bluetoothctl devices Connected 2>/dev/null | head -n1)
         if [ -n "$connected_info" ]; then
-            connected_mac=$(echo "$connected_info" | awk '{print $2}')
+            local rest="${connected_info#Device }"
+            connected_mac="${rest:0:17}"
             if [ -n "$connected_mac" ]; then
                 CACHE_FILE="$CACHE_DIR/bt_stat_${connected_mac//:/_}"
 
                 if [ -f "$CACHE_FILE" ]; then
                     source "$CACHE_FILE"
                 else
-                    name=$(echo "$connected_info" | awk '{$1=$2=""; print $0}' | xargs)
-                    info=$(bluetoothctl info "$connected_mac" 2>/dev/null)
-                    icon_type=$(echo "$info" | grep "Icon:" | awk -F: '{print $2}' | xargs)
+                    local name="${rest:18}"
+                    local info=$(bluetoothctl info "$connected_mac" 2>/dev/null)
+                    local icon_type=""
+                    if [[ "$info" =~ Icon:[[:space:]]*(.*) ]]; then
+                        icon_type="${BASH_REMATCH[1]}"
+                        icon_type="${icon_type%"${icon_type##*[![:space:]]}"}"
+                    fi
                     icon=$(get_icon "$icon_type" "$name")
                     profile=$(get_audio_profile "$connected_mac")
                     
@@ -79,8 +78,15 @@ EOF
                     CACHE_PROFILE="$profile"
                 fi
                 
-                bat=$(bluetoothctl info "$connected_mac" 2>/dev/null | grep -i "Battery Percentage" | awk '{print $NF}' | tr -d '()')
-                [ -z "$bat" ] || [ "$bat" == "?" ] && bat="0"
+                if [ -z "$info" ]; then
+                    info=$(bluetoothctl info "$connected_mac" 2>/dev/null)
+                fi
+                local bat="0"
+                if [[ "$info" =~ [Bb]attery[[:space:]]+[Pp]ercentage:[[:space:]]*0x[0-9a-fA-F]+[[:space:]]*\(([0-9]+)\) ]]; then
+                    bat="${BASH_REMATCH[1]}"
+                elif [[ "$info" =~ [Bb]attery[[:space:]]+[Pp]ercentage:[[:space:]]*\(?([0-9]+)\)? ]]; then
+                    bat="${BASH_REMATCH[1]}"
+                fi
 
                 connected_json=$(jq -n -c \
                                     --arg id "$connected_mac" \
@@ -93,34 +99,43 @@ EOF
             fi
         fi
 
+        # Get paired devices once
+        local paired_list=$(bluetoothctl paired-devices 2>/dev/null)
+
         # Get all devices
-        while IFS= read -r line; do
+        devices_json=$(while IFS= read -r line; do
             [ -z "$line" ] && continue
             
-            mac=$(echo "$line" | awk '{print $2}')
-            name=$(echo "$line" | awk '{$1=$2=""; print $0}' | xargs)
+            local rest="${line#Device }"
+            local mac="${rest:0:17}"
+            local name="${rest:18}"
             
-            # Skip if no MAC or it's the connected device
             [ -z "$mac" ] && continue
             [[ "$mac" == "$connected_mac" ]] && continue
             
-            icon=$(get_icon "unknown" "$name")
+            local icon=$(get_icon "unknown" "$name")
             
-            if is_device_paired "$mac"; then
+            local action="Sparuj"
+            if echo "$paired_list" | grep -Fq "$mac"; then
                 action="Połącz"
-                obj=$(jq -n -c --arg id "$mac" --arg name "$name" --arg mac "$mac" --arg icon "$icon" --arg action "$action" '{id: $id, name: $name, mac: $mac, icon: $icon, action: $action}')
-                paired_list_objs+=("$obj")
-            else
-                action="Sparuj"
-                obj=$(jq -n -c --arg id "$mac" --arg name "$name" --arg mac "$mac" --arg icon "$icon" --arg action "$action" '{id: $id, name: $name, mac: $mac, icon: $icon, action: $action}')
-                discovered_list_objs+=("$obj")
             fi
-        done < <(bluetoothctl devices 2>/dev/null)
-
-        all_objs=("${paired_list_objs[@]}" "${discovered_list_objs[@]}")
-        if [ ${#all_objs[@]} -gt 0 ]; then
-            devices_json=$(printf '%s\n' "${all_objs[@]}" | jq -s -c '.')
-        fi
+            
+            printf "%s\t%s\t%s\t%s\t%s\n" "$mac" "$name" "$mac" "$icon" "$action"
+        done < <(bluetoothctl devices 2>/dev/null) | jq -R -s -c '
+          split("\n")
+          | map(
+              select(length > 0)
+              | split("\t")
+              | {
+                  id: .[0],
+                  name: .[1],
+                  mac: .[2],
+                  icon: .[3],
+                  action: .[4]
+                }
+            )
+          | sort_by(if .action == "Połącz" then 0 else 1 end)
+        ')
         [ -z "$devices_json" ] && devices_json="[]"
     fi
 

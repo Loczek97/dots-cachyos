@@ -164,6 +164,96 @@ get_battery_icon() {
     if [ "$percent" -ge 90 ]; then echo "󰁹"; elif [ "$percent" -ge 70 ]; then echo "󰂁"; elif [ "$percent" -ge 50 ]; then echo "󰁿"; elif [ "$percent" -ge 30 ]; then echo "󰁽"; else echo "󰁺"; fi
 }
 
+get_all_fast() {
+    local vol="50"
+    local muted="false"
+    if command -v pamixer &> /dev/null; then
+        vol=$(pamixer --get-volume 2>/dev/null || echo "50")
+        muted=$(pamixer --get-mute 2>/dev/null || echo "false")
+    elif command -v pactl &> /dev/null; then
+        vol=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+%' | head -n1 | tr -d '%' || echo "50")
+        muted=$(pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q "yes" && echo "true" || echo "false")
+    fi
+
+    local vol_icon="󰕾"
+    if [ "$muted" = "true" ]; then vol_icon="󰝟"
+    elif [ "$vol" -ge 70 ]; then vol_icon="󰕾"
+    elif [ "$vol" -ge 30 ]; then vol_icon="󰖀"
+    elif [ "$vol" -gt 0 ]; then vol_icon="󰕿"
+    else vol_icon="󰝟"
+    fi
+
+    local layout=$(hyprctl devices -j | jq -r '.keyboards[] | select(.main == true) | .active_keymap' | head -n1)
+    layout=$(echo "$layout" | cut -c1-2 | tr '[:lower:]' '[:upper:]')
+
+    echo "$vol"
+    echo "$vol_icon"
+    echo "${layout:-PL}"
+    echo "$muted"
+}
+
+get_all_slow() {
+    local wifi_status="disabled"
+    local wifi_ssid=""
+    local wifi_icon="󰤮"
+
+    if command -v nmcli &> /dev/null; then
+        wifi_status=$(nmcli -t -f WIFI g 2>/dev/null || echo "disabled")
+        if [ "$wifi_status" = "enabled" ]; then
+            local active_line=$(nmcli -t -f ACTIVE,SSID,SIGNAL dev wifi 2>/dev/null | grep -E '^(yes|tak)' | head -n1)
+            if [ -n "$active_line" ]; then
+                wifi_ssid=$(echo "$active_line" | cut -d: -f2)
+                local strength=$(echo "$active_line" | cut -d: -f3)
+                strength=${strength:-0}
+                if [ "$strength" -ge 75 ]; then wifi_icon="󰤨"
+                elif [ "$strength" -ge 50 ]; then wifi_icon="󰤥"
+                elif [ "$strength" -ge 25 ]; then wifi_icon="󰤢"
+                else wifi_icon="󰤟"
+                fi
+            else
+                wifi_icon="󰤯"
+            fi
+        fi
+    fi
+
+    local bt_status="off"
+    local bt_icon="󰂲"
+    local bt_connected="Disconnected"
+
+    if [ -d /sys/class/bluetooth ]; then
+        if timeout 0.2 bluetoothctl show 2>/dev/null | grep -q "Powered: yes"; then
+            bt_status="on"
+            bt_icon="󰂯"
+            local dev=$(timeout 0.2 bluetoothctl devices Connected 2>/dev/null | head -n1 | cut -d' ' -f3-)
+            if [ -n "$dev" ]; then
+                bt_icon="󰂱"
+                bt_connected="$dev"
+            fi
+        fi
+    fi
+
+    local bat_percent="100"
+    if [ -f /sys/class/power_supply/BAT*/capacity ]; then
+        bat_percent=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1 || echo "100")
+    fi
+    local bat_icon="󰁹"
+    if [ "$bat_percent" -ge 90 ]; then bat_icon="󰁹"
+    elif [ "$bat_percent" -ge 70 ]; then bat_icon="󰂁"
+    elif [ "$bat_percent" -ge 50 ]; then bat_icon="󰁿"
+    elif [ "$bat_percent" -ge 30 ]; then bat_icon="󰁽"
+    else bat_icon="󰁺"
+    fi
+
+    echo "$wifi_status"
+    echo "$wifi_icon"
+    echo "$wifi_ssid"
+    echo "$bt_status"
+    echo "$bt_icon"
+    echo "$bt_connected"
+    echo "$bat_percent"
+    echo "$bat_icon"
+}
+
 ## EXECUTION
 cmd="$1"
 case $cmd in
@@ -179,5 +269,7 @@ case $cmd in
     --battery-percent) get_battery_percent ;;
     --battery-icon) get_battery_icon ;;
     --kb-layout) get_kb_layout ;;
+    --all-fast) get_all_fast ;;
+    --all-slow) get_all_slow ;;
     *) echo "Unknown: $cmd" ;;
 esac

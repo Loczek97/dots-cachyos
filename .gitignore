@@ -1,5 +1,7 @@
 # Matugen generated files
 hyprland/.config/hypr/colors.conf
+hyprland/.config/hypr/colors.lua
+quickshell/.config/quickshell/desktopclock/clock_pos.json
 kitty/.config/kitty/current-theme.conf
 rofi/.config/rofi/shared/colors.rasi
 swaync/.config/swaync/matugen-colors.css
