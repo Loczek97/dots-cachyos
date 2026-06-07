@@ -33,16 +33,13 @@ hl.bind(mainMod .. " + R", hl.dsp.exec_raw("togglesplit"))
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ action = "toggle" }))
 hl.bind(mainMod .. " + " .. shift .. " + W", hl.dsp.exec_cmd("~/.config/scripts/qs_manager.sh toggle wallpaper"))
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("~/.config/scripts/qs_manager.sh toggle taskmanager"))
+hl.bind("ALT" .. " + F4", hl.dsp.exec_cmd("~/.config/scripts/qs_manager.sh toggle dashboard"))
 
 -- scrolloverview
 hl.bind(mainMod .. " + Tab", hl.dsp.exec_raw("scrolloverview:overview,toggle"))
 
 -- Move focus
 local directions = {
-	h = "l",
-	l = "r",
-	k = "u",
-	j = "d",
 	Left = "l",
 	Right = "r",
 	Up = "u",

@@ -23,11 +23,11 @@ if [[ "$MIME_TYPE" == video/* ]]; then
   ICON_PATH="$TEMP_FRAME"
   ANALYSIS_PATH="$TEMP_FRAME"
 
-  swww clear
+  awww clear
   mpvpaper -o 'loop --hwdec=auto --no-audio --cache=no --demuxer-max-bytes=10M --vd-lavc-threads=1 --profile=fast --vd-lavc-fast --swapchain-depth=1' '*' "$WALLPAPER_PATH" &
   disown
 else
-  swww query || swww-daemon &
+  awww query || awww-daemon &
   awww img "$WALLPAPER_PATH" --transition-type "$TRANSITION" --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1
   matugen image "$WALLPAPER_PATH" --mode dark --source-color-index 0
   ANALYSIS_PATH="$WALLPAPER_PATH"
