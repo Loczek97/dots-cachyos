@@ -92,7 +92,7 @@ handle_wallpaper_prep() {
         if [ ! -f "$thumb" ]; then
           ffmpeg -y -ss 00:00:05 -i "$img" -vframes 1 -f image2 -q:v 2 "$thumb" >/dev/null 2>&1
         fi
-        
+
         # Color marker for video (using thumbnail)
         if [ -f "$thumb" ] && [[ -z $(ls "$MARKER_DIR/000_${filename}_HEX_"* 2>/dev/null) ]]; then
           hex=$(magick "$thumb" -scale 1x1\! -alpha off -format "%[hex:p{0,0}]" info: 2>/dev/null | grep -oE '[0-9A-Fa-f]{6}' | head -n 1)
@@ -229,7 +229,7 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
     handle_network_prep
     ;;
   taskmanager) QML="taskmanager/TaskManager.qml" ;;
-  mixer) QML="mixer/MixerPopup.qml" ;;
+  mixer) QML="mixer_old/MixerPopup.qml" ;;
   dashboard) QML="dashboard/DashboardPopup.qml" ;;
   mimemanager) QML="mimemanager/MimeManager.qml" ;;
   launcher) QML="launcher/Launcher.qml" ;;

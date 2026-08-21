@@ -11,7 +11,7 @@ hl.window_rule({ match = { title = "Lunar Client.*" }, no_blur = true, opacity =
 hl.window_rule({ match = { class = "Better MC" }, no_blur = true, opacity = "1.0 override" })
 
 hl.window_rule({
-	match = { class = "discord-canary" },
+	match = { class = "(?i).*discord.*" },
 	opacity = 0.875,
 	workspace = "5",
 	no_initial_focus = true,
@@ -28,6 +28,13 @@ hl.layer_rule({ match = { namespace = "calendar_win" }, no_anim = true })
 hl.layer_rule({ match = { namespace = "network_win" }, no_anim = true })
 hl.layer_rule({ match = { namespace = "hyprpicker" }, no_anim = true })
 
+-- --------- Steam ---------
+hl.window_rule({
+	match = { class = "steam" },
+	workspace = "1",
+	no_initial_focus = true,
+})
+
 -- ───────── Steam Games (General) ─────────
 hl.window_rule({
 	match = { class = "steam_app_.*" },
@@ -35,6 +42,17 @@ hl.window_rule({
 	opacity = "1.0 override",
 	no_blur = true,
 	fullscreen = true,
+	workspace = "2",
+})
+
+-- --------- CS2 ------------
+hl.window_rule({
+	match = { class = "cs2" },
+	immediate = true,
+	opacity = "1.0 override",
+	no_blur = true,
+	fullscreen = true,
+	workspace = "2",
 })
 
 -- ───────── Gamescope ─────────

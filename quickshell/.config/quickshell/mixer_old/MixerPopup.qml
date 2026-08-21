@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 import "."
 
@@ -330,19 +331,23 @@ ShellRoot {
 
                 // The visible card
                 Rectangle {
+                    id: cardRect
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.right: parent.right
                     height: 85
                     radius: 15
-                    color: nodeMa.containsMouse ? root.surface1 : "#05ffffff"
-                    border.color: nodeMa.containsMouse ? root.surface2 : "transparent"
+                    
+                    readonly property bool isHovered: nodeHover.hovered
+                    
+                    color: isHovered ? "#0affffff" : "#05ffffff"
+                    border.color: isHovered ? root.surface2 : "transparent"
                     
                     Behavior on color { ColorAnimation { duration: 150 } }
                     
                     PwObjectTracker { objects: [modelData] }
 
-                    MouseArea { id: nodeMa; anchors.fill: parent; hoverEnabled: true }
+                    HoverHandler { id: nodeHover }
 
                     RowLayout {
                         anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 20; spacing: 15
@@ -362,7 +367,29 @@ ShellRoot {
                         ColumnLayout {
                             Layout.fillWidth: true; spacing: 4
                             Text { 
-                                text: modelData.description != "" ? modelData.description : modelData.name;
+                                text: {
+                                    if (modelData.isStream && modelData.properties) {
+                                        var appName = modelData.properties["application.name"] || "";
+                                        var binaryName = modelData.properties["application.process.binary"] || "";
+                                        
+                                        var isGeneric = appName === "" 
+                                            || appName.toLowerCase().includes("sdl") 
+                                            || appName.toLowerCase().includes("webrtc") 
+                                            || appName.toLowerCase().includes("alsa") 
+                                            || appName.toLowerCase().includes("voiceengine") 
+                                            || appName.toLowerCase().includes("audio stream")
+                                            || appName.toLowerCase().includes("unknown");
+                                        
+                                        if (isGeneric && binaryName !== "") {
+                                            if (binaryName.toLowerCase().endsWith(".exe")) {
+                                                binaryName = binaryName.slice(0, -4);
+                                            }
+                                            return binaryName.charAt(0).toUpperCase() + binaryName.slice(1);
+                                        }
+                                        return appName || binaryName || (modelData.description !== "" ? modelData.description : modelData.name);
+                                    }
+                                    return modelData.description !== "" ? modelData.description : modelData.name;
+                                }
                                 color: root.text; font.family: "CaskaydiaCove Nerd Font"; font.weight: Font.Black; font.pixelSize: 15; elide: Text.ElideRight 
                                 Layout.fillWidth: true
                             }
@@ -389,7 +416,7 @@ ShellRoot {
                                         y: volSlider.topPadding + volSlider.availableHeight / 2 - height / 2
                                         implicitWidth: 18; implicitHeight: 18; radius: 9; color: root.text; border.color: root.mauve; border.width: 2
                                         
-                                        scale: volSlider.pressed ? 0.9 : (volSlider.hovered ? 1.1 : 1.0)
+                                        scale: volSlider.pressed ? 0.9 : 1.0
                                         Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
                                     }
                                 }
@@ -407,10 +434,10 @@ ShellRoot {
                             // Mute Toggle
                             Rectangle {
                                 width: 44; height: 44; radius: 12
-                                color: (modelData.audio?.muted ? root.red : (muteMa.containsMouse ? root.surface2 : "transparent"))
+                                color: (modelData.audio?.muted ? root.red : (muteMa.pressed ? root.surface2 : "transparent"))
                                 
                                 Behavior on color { ColorAnimation { duration: 150 } }
-                                scale: muteMa.containsMouse ? 1.05 : 1.0
+                                scale: muteMa.pressed ? 1.05 : 1.0
                                 Behavior on scale { NumberAnimation { duration: 150 } }
 
                                 Text { 
@@ -418,7 +445,7 @@ ShellRoot {
                                     font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 20; color: modelData.audio?.muted ? root.base : root.text 
                                 }
                                 MouseArea { 
-                                    id: muteMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                    id: muteMa; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                     onClicked: if (modelData.audio) modelData.audio.muted = !modelData.audio.muted 
                                 }
                             }
@@ -428,10 +455,10 @@ ShellRoot {
                                 visible: !modelData.isStream
                                 width: 44; height: 44; radius: 12
                                 property bool isDefault: (modelData.isSink ? Pipewire.defaultAudioSink === modelData : Pipewire.defaultAudioSource === modelData)
-                                color: isDefault ? root.yellow : (starMa.containsMouse ? root.surface2 : "transparent")
+                                color: isDefault ? root.yellow : (starMa.pressed ? root.surface2 : "transparent")
                                 
                                 Behavior on color { ColorAnimation { duration: 150 } }
-                                scale: starMa.containsMouse ? 1.05 : 1.0
+                                scale: starMa.pressed ? 1.05 : 1.0
                                 Behavior on scale { NumberAnimation { duration: 150 } }
 
                                 Text { 
@@ -439,7 +466,7 @@ ShellRoot {
                                     font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 20; color: parent.isDefault ? root.base : root.overlay2 
                                 }
                                 MouseArea { 
-                                    id: starMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                    id: starMa; anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (modelData.isSink) Pipewire.preferredDefaultAudioSink = modelData;
                                         else if (!modelData.isStream) Pipewire.preferredDefaultAudioSource = modelData;
