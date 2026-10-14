@@ -6,8 +6,8 @@ from PIL import Image
 CLOCK_WIDTH = 400
 CLOCK_HEIGHT = 500
 # Target screen resolution for calculation
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = 2560
+SCREEN_HEIGHT = 1440
 
 def analyze_wallpaper(image_path, output_json_path):
     try:

@@ -6,7 +6,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 source /usr/share/cachyos-zsh-config/cachyos-config.zsh
-
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
@@ -15,6 +14,8 @@ source /usr/share/cachyos-zsh-config/cachyos-config.zsh
 
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+
+export EDITOR="nvim"
 
 eval "$(ssh-agent -s)" >> /dev/null
 
@@ -25,4 +26,3 @@ kurwa(){
 alias wfinfo="~/.cargo/bin/wfinfo /mnt/dysk_dane/SteamLibrary/steamapps/compatdata/230410/pfx/drive_c/users/steamuser/AppData/Local/Warframe/EE.log"
 
 source $HOME/.local/bin/env
-

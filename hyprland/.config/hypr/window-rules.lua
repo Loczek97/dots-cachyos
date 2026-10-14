@@ -28,6 +28,9 @@ hl.layer_rule({ match = { namespace = "calendar_win" }, no_anim = true })
 hl.layer_rule({ match = { namespace = "network_win" }, no_anim = true })
 hl.layer_rule({ match = { namespace = "hyprpicker" }, no_anim = true })
 
+-- --------- Coucou ----------
+hl.layer_rule({ match = { namespace = "coucou" }, no_anim = true, blur = false, ignore_alpha = 0.0 })
+
 -- --------- Steam ---------
 hl.window_rule({
 	match = { class = "steam" },

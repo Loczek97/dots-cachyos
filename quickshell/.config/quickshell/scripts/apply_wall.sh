@@ -28,7 +28,7 @@ if [[ "$MIME_TYPE" == video/* ]]; then
   disown
 else
   awww query || awww-daemon &
-  awww img "$WALLPAPER_PATH" --transition-type "$TRANSITION" --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1
+  awww img "$WALLPAPER_PATH" --transition-type "$TRANSITION" --transition-pos 0.5,0.5 --transition-fps 144 --transition-duration 1 --resize crop
   matugen image "$WALLPAPER_PATH" --mode dark --source-color-index 0
   ANALYSIS_PATH="$WALLPAPER_PATH"
 fi
