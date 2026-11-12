@@ -25,4 +25,4 @@ kurwa(){
 
 alias wfinfo="~/.cargo/bin/wfinfo /mnt/dysk_dane/SteamLibrary/steamapps/compatdata/230410/pfx/drive_c/users/steamuser/AppData/Local/Warframe/EE.log"
 
-source $HOME/.local/bin/env
+source $HOME/.local/bin
